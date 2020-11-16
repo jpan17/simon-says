@@ -1,7 +1,7 @@
 # simon-says
 
 ## Data ##
-* Hand gesture dataset
+* Hand gesture dataset (https://lttm.dei.unipd.it/downloads/gesture/)
 * Face detection
 * Recorded / live video
 
