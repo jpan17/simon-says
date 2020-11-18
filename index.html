@@ -1,0 +1,21 @@
+<html lang=”en”>
+  <head>
+      <meta charset="utf-8">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Simon Says</title>
+      <link rel="stylesheet" href="stylez.css">
+  </head>
+  <body>
+      <!-- Camera -->
+      <main id="camera">
+          <canvas id="camera-sensor"></canvas>
+          <canvas id="test-canvas"></canvas> <!-- Using this to make sure the captures are correct -->
+          <video id="camera-view" autoplay playsinline></video>
+          <img id="camera-output" src="//:0" alt="">
+          <button id="start-button">Start!</button>
+          <button id="stop-button">Stop!</button>
+      </main>
+      <script src="app.js"></script>
+  </body>
+</html>
