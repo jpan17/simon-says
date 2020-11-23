@@ -1,6 +1,24 @@
 // Set constraints for the video stream
 var constraints = { video: { facingMode: 'user' }, audio: false }
 
+var model = null;
+
+// define model parameters 
+const modelParams = {
+    flipHorizontal: false,   // flip e.g for video  
+    maxNumBoxes: 20,        // maximum number of boxes to detect
+    iouThreshold: 0.5,      // ioU threshold for non-max suppression
+    scoreThreshold: 0.6,    // confidence threshold for predictions.
+}
+
+function runDetectionImage(img) {
+    model.detect(img).then(predictions => {
+        console.log("Predictions: ", predictions);
+        context = testCanvas.getContext('2d')
+        model.renderPredictions(predictions, testCanvas, context, img);
+    });
+}
+
 // Define constants
 const cameraView = document.querySelector('#camera-view'),
     cameraOutput = document.querySelector('#camera-output'),
@@ -44,6 +62,7 @@ let capturePic = () => {
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
         cameraOutput.src = cameraSensor.toDataURL('image/webp')
+        runDetectionImage(cameraOutput)
         
         //// Make sure the captured data is correct... imgData.data should be pixel values of each snapshot
         // testCanvas.width = cameraView.videoWidth
@@ -53,4 +72,12 @@ let capturePic = () => {
         // console.log(imgData.data)
     }
 }
+
+// Load the model.?
+handTrack.load(modelParams).then(lmodel => {
+    // detect objects in the image.
+    model = lmodel
+    runDetectionImage(cameraOutput)
+});
+
 setInterval(capturePic, 1000)
