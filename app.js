@@ -7,15 +7,59 @@ var model = null;
 const modelParams = {
     flipHorizontal: false,   // flip e.g for video  
     maxNumBoxes: 20,        // maximum number of boxes to detect
-    iouThreshold: 0.5,      // ioU threshold for non-max suppression
+    iouThreshold: 0.3,      // ioU threshold for non-max suppression
     scoreThreshold: 0.6,    // confidence threshold for predictions.
 }
 
+const options = {
+    maxSizeFactor: 0.5,     
+    heightScaleFactor: 0.25,
+    widthScaleFactor: 0.25,
+}
+
 function runDetectionImage(img) {
+    const height = img.height;
+    const width = img.width;
+
     model.detect(img).then(predictions => {
-        console.log("Predictions: ", predictions);
+        var newPredictions = []
+        predictions.forEach(prediction => {
+            const boundingBox = prediction.bbox;
+            // remove the really big ones
+            if (boundingBox[2] > width * maxSizeFactor || boundingBox[3] > height * maxSizeFactor) {
+                return;
+            }
+
+            // scale bounding box
+            const widthIncrease = boundingBox[2] * widthScaleFactor;
+            const heightIncrease = boundingBox[3] * heightScaleFactor;
+            const newBoundingBox = [
+                boundingBox[0] - widthIncrease / 2,
+                boundingBox[1] - heightIncrease / 2,
+                boundingBox[2] + widthIncrease,
+                boundingBox[3] + heightIncrease,
+            ]
+            prediction.bbox = newBoundingBox;
+            newPredictions.push(prediction);
+        })
+
+        // skip image if no predictions remain
+        if (newPredictions.length === 0) {
+            return;
+        }
+        
+        // draw bounding box into testCanvas
         context = testCanvas.getContext('2d')
-        model.renderPredictions(predictions, testCanvas, context, img);
+        model.renderPredictions(newPredictions, testCanvas, context, img);
+
+        // save image from testCanvas to file
+        var a = document.createElement('a');
+        a.href = testCanvas.toDataURL();
+        a.download = 'prediction.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
     });
 }
 
@@ -74,10 +118,11 @@ let capturePic = () => {
 }
 
 // Load the model.?
+console.log('beginning to load model');
 handTrack.load(modelParams).then(lmodel => {
     // detect objects in the image.
     model = lmodel
-    runDetectionImage(cameraOutput)
+    console.log('camera model loaded!');
 });
 
 setInterval(capturePic, 1000)
