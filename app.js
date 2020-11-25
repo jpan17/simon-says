@@ -18,49 +18,70 @@ const options = {
 }
 
 function runDetectionImage(img) {
-    const height = img.height;
-    const width = img.width;
-
-    model.detect(img).then(predictions => {
-        var newPredictions = []
-        predictions.forEach(prediction => {
-            const boundingBox = prediction.bbox;
-            // remove the really big ones
-            if (boundingBox[2] > width * options.maxSizeFactor || boundingBox[3] > height * options.maxSizeFactor) {
-                return;
+    model.estimateHands(img).then(predictions => {
+        console.log(`Found ${predictions.length} hands`)
+        console.log(predictions)
+        if (predictions.length > 0) {
+            for (let i = 0; i < predictions.length; i++) {
+                //// Log hand keypoints.
+                // const keypoints = predictions[i].landmarks;
+                // for (let i = 0; i < keypoints.length; i++) {
+                //     const [x, y, z] = keypoints[i];
+                //     console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
+                // }
+                console.log(`Confidence scores: ${predictions[i].handInViewConfidence}`)
+                console.log(`Bounding Box:`)
+                console.table(predictions[i].boundingBox)
             }
+        } 
+    })
 
-            // scale bounding box
-            const widthIncrease = boundingBox[2] * options.widthScaleFactor;
-            const heightIncrease = boundingBox[3] * options.heightScaleFactor;
-            const newBoundingBox = [
-                boundingBox[0] - widthIncrease / 2,
-                boundingBox[1] - heightIncrease / 2,
-                boundingBox[2] + widthIncrease,
-                boundingBox[3] + heightIncrease,
-            ]
-            prediction.bbox = newBoundingBox;
-            newPredictions.push(prediction);
-        })
+    /**
+     * Code for HandTrack.js and bounding boxes below
+     */
+    // const height = img.height;
+    // const width = img.width;
 
-        // skip image if no predictions remain
-        if (newPredictions.length === 0) {
-            return;
-        }
+    // model.detect(img).then(predictions => {
+    //     var newPredictions = []
+    //     predictions.forEach(prediction => {
+    //         const boundingBox = prediction.bbox;
+    //         // remove the really big ones
+    //         if (boundingBox[2] > width * options.maxSizeFactor || boundingBox[3] > height * options.maxSizeFactor) {
+    //             return;
+    //         }
+
+    //         // scale bounding box
+    //         const widthIncrease = boundingBox[2] * options.widthScaleFactor;
+    //         const heightIncrease = boundingBox[3] * options.heightScaleFactor;
+    //         const newBoundingBox = [
+    //             boundingBox[0] - widthIncrease / 2,
+    //             boundingBox[1] - heightIncrease / 2,
+    //             boundingBox[2] + widthIncrease,
+    //             boundingBox[3] + heightIncrease,
+    //         ]
+    //         prediction.bbox = newBoundingBox;
+    //         newPredictions.push(prediction);
+    //     })
+
+    //     // skip image if no predictions remain
+    //     if (newPredictions.length === 0) {
+    //         return;
+    //     }
         
-        // draw bounding box into testCanvas
-        context = testCanvas.getContext('2d')
-        model.renderPredictions(newPredictions, testCanvas, context, img);
+    //     // draw bounding box into testCanvas
+    //     context = testCanvas.getContext('2d')
+    //     model.renderPredictions(newPredictions, testCanvas, context, img);
 
-        // // save image from testCanvas to file
-        // var a = document.createElement('a');
-        // a.href = testCanvas.toDataURL();
-        // a.download = 'prediction.png';
-        // document.body.appendChild(a);
-        // a.click();
-        // document.body.removeChild(a);
+    //     // // save image from testCanvas to file
+    //     // var a = document.createElement('a');
+    //     // a.href = testCanvas.toDataURL();
+    //     // a.download = 'prediction.png';
+    //     // document.body.appendChild(a);
+    //     // a.click();
+    //     // document.body.removeChild(a);
 
-    });
+    // });
 }
 
 // Define constants
@@ -114,7 +135,10 @@ let capturePic = () => {
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
         cameraOutput.src = cameraSensor.toDataURL('image/webp')
-        runDetectionImage(cameraOutput)
+        if (model) {
+            // Not sure why, but doesn't work on cameraOutput
+            runDetectionImage(cameraSensor)
+        }
         
         if (curTime % timePerSeq == 0) {
             quadNum = Math.floor(Math.random() * 4)
@@ -126,12 +150,11 @@ let capturePic = () => {
     }
 }
 
-// Load the model.?
+// Load the model!
 console.log('beginning to load model');
-handTrack.load(modelParams).then(lmodel => {
-    // detect objects in the image.
+handpose.load().then(lmodel => {
     model = lmodel
     console.log('camera model loaded!');
-});
+})
 
 setInterval(capturePic, 1000)
