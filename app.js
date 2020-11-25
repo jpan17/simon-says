@@ -6,8 +6,8 @@ var model = null;
 // define model parameters 
 const modelParams = {
     flipHorizontal: false,   // flip e.g for video  
-    maxNumBoxes: 20,        // maximum number of boxes to detect
-    iouThreshold: 0.5,      // ioU threshold for non-max suppression
+    maxNumBoxes: 3,        // maximum number of boxes to detect
+    iouThreshold: 0.3,      // ioU threshold for non-max suppression
     scoreThreshold: 0.6,    // confidence threshold for predictions.
 }
 
@@ -21,12 +21,12 @@ function runDetectionImage(img) {
 
 // Define constants
 const cameraView = document.querySelector('#camera-view'),
-    cameraOutput = document.querySelector('#camera-output'),
-    cameraSensor = document.querySelector('#camera-sensor'),
-    startButton = document.querySelector('#start-button'),
-    stopButton = document.querySelector('#stop-button'),
-    testCanvas = document.querySelector('#test-canvas')
-    
+cameraOutput = document.querySelector('#camera-output'),
+cameraSensor = document.querySelector('#camera-sensor'),
+startButton = document.querySelector('#start-button'),
+stopButton = document.querySelector('#stop-button'),
+testCanvas = document.querySelector('#test-canvas')
+
 let startGame = false
 
 // Access the device camera and stream to cameraView
