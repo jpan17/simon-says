@@ -57,8 +57,9 @@ button, #seq-display {
     object-fit: cover;
     z-index: 2 !important;
     border: solid 3px white;
-    height: 300px !important;
+    transform: scaleX(-1);
+    /* height: 300px !important;
     width: 300px !important;
     top: 20px;
-    right: 20px;
+    right: 20px; */
 }

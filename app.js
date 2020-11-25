@@ -23,15 +23,30 @@ function runDetectionImage(img) {
         console.log(predictions)
         if (predictions.length > 0) {
             for (let i = 0; i < predictions.length; i++) {
+                const prediction = predictions[i]
                 //// Log hand keypoints.
                 // const keypoints = predictions[i].landmarks;
                 // for (let i = 0; i < keypoints.length; i++) {
                 //     const [x, y, z] = keypoints[i];
                 //     console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
                 // }
-                console.log(`Confidence scores: ${predictions[i].handInViewConfidence}`)
+                console.log(`Confidence scores: ${prediction.handInViewConfidence}`)
                 console.log(`Bounding Box:`)
-                console.table(predictions[i].boundingBox)
+                console.table(prediction.boundingBox)
+
+                // Draw diagonal of bounding box
+                let { topLeft, bottomRight } = prediction.boundingBox
+                let cw = cameraSensor.width, 
+                    ch = cameraSensor.height, 
+                    tw = testCanvas.width, 
+                    th = testCanvas.height
+                let ctx = testCanvas.getContext('2d')
+                ctx.beginPath()
+                // Multiply by tw/cw to rescale box from cameraSensor coords to testCanvas coords
+                // Btw I tested the coords directly on cameraSensor and the lines drawn were the same, so the rescaling should work
+                ctx.moveTo(Math.floor(topLeft[0] * tw / cw), Math.floor(topLeft[1] * th / ch))
+                ctx.lineTo(Math.floor(bottomRight[0] * tw / cw), Math.floor(bottomRight[1] * th / ch))
+                ctx.stroke()
             }
         } 
     })
