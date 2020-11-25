@@ -1,3 +1,5 @@
+// const { traceDeprecation } = require("process");
+
 // Set constraints for the video stream
 var constraints = { video: { facingMode: 'user' }, audio: false }
 
@@ -13,14 +15,16 @@ const modelParams = {
 
 const options = {
     maxSizeFactor: 0.5,     
-    heightScaleFactor: 0.25,
-    widthScaleFactor: 0.25,
+    heightScaleFactor: 0.20,
+    widthScaleFactor: 0.5,
 }
 
 function runDetectionImage(img) {
     model.estimateHands(img).then(predictions => {
         console.log(`Found ${predictions.length} hands`)
         console.log(predictions)
+        let ctx = testCanvas.getContext('2d')
+
         if (predictions.length > 0) {
             for (let i = 0; i < predictions.length; i++) {
                 const prediction = predictions[i]
@@ -35,19 +39,20 @@ function runDetectionImage(img) {
                 console.table(prediction.boundingBox)
 
                 // Draw diagonal of bounding box
-                let { topLeft, bottomRight } = prediction.boundingBox
-                let cw = cameraSensor.width, 
-                    ch = cameraSensor.height, 
-                    tw = testCanvas.width, 
-                    th = testCanvas.height
-                let ctx = testCanvas.getContext('2d')
-                ctx.beginPath()
-                // Multiply by tw/cw to rescale box from cameraSensor coords to testCanvas coords
-                // Btw I tested the coords directly on cameraSensor and the lines drawn were the same, so the rescaling should work
-                ctx.moveTo(Math.floor(topLeft[0] * tw / cw), Math.floor(topLeft[1] * th / ch))
-                ctx.lineTo(Math.floor(bottomRight[0] * tw / cw), Math.floor(bottomRight[1] * th / ch))
-                ctx.stroke()
+                // let { topLeft, bottomRight } = prediction.boundingBox
+                // let cw = cameraSensor.width, 
+                //     ch = cameraSensor.height, 
+                //     tw = testCanvas.width, 
+                //     th = testCanvas.height
+
+                // ctx.beginPath()
+                // // Multiply by tw/cw to rescale box from cameraSensor coords to testCanvas coords
+                // // Btw I tested the coords directly on cameraSensor and the lines drawn were the same, so the rescaling should work
+                // ctx.moveTo(Math.floor(topLeft[0] * tw / cw), Math.floor(topLeft[1] * th / ch))
+                // ctx.lineTo(Math.floor(bottomRight[0] * tw / cw), Math.floor(bottomRight[1] * th / ch))
+                // ctx.stroke()
             }
+            renderPredictions(predictions, testCanvas, ctx, img)
         } 
     })
 
@@ -165,6 +170,62 @@ let capturePic = () => {
     }
 }
 
+function renderPredictions(predictions, canvas, context, mediasource) {
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = mediasource.width;
+    canvas.height = mediasource.height;
+    // console.log("render", mediasource.width, mediasource.height)
+
+    context.save();
+    if (modelParams.flipHorizontal) {
+      context.scale(-1, 1);
+      context.translate(-mediasource.width, 0);
+    }
+    context.drawImage(mediasource, 0, 0, mediasource.width, mediasource.height);
+    context.restore();
+    context.font = '10px Arial';
+
+    // console.log('number of detections: ', predictions.length);
+    for (let i = 0; i < predictions.length; i++) {
+        
+        let { topLeft, bottomRight } = predictions[i].boundingBox
+        
+        let boundingBoxWidth = bottomRight[0] - topLeft[0]
+        let boundingBoxHeight = topLeft[1] - bottomRight[1]
+        let bottomLeft = [topLeft[0], topLeft[1] - boundingBoxHeight]
+        const widthDecrease = boundingBoxWidth * options.widthScaleFactor;
+        const heightDecrease = boundingBoxHeight * options.heightScaleFactor;
+
+        const newPredictionBox = [
+            bottomLeft[0] + widthDecrease / 2,
+            bottomLeft[1] + heightDecrease / 3,
+            boundingBoxWidth - widthDecrease,
+            boundingBoxHeight - heightDecrease,
+        ]
+
+        context.beginPath();
+        context.fillStyle = "rgba(255, 255, 255, 0.6)";
+        context.fillRect(newPredictionBox[0], newPredictionBox[1] - 17, newPredictionBox[2], 17);
+        context.rect(...newPredictionBox);
+
+        // draw a dot at the center of bounding box
+        context.lineWidth = 3;
+        context.strokeStyle = '#0063FF';
+        context.fillStyle = "#0063FF"; // "rgba(244,247,251,1)";
+        context.fillRect(newPredictionBox[0] + (newPredictionBox[2] / 2), newPredictionBox[1] + (newPredictionBox[3] / 2), 5, 5);
+
+        context.stroke();
+        context.fillText(
+            predictions[i].handInViewConfidence.toFixed(3) + ' ' + " | hand",
+            newPredictionBox[0] + 5,
+            newPredictionBox[1] > 10 ? newPredictionBox[1] - 5 : 10);
+    }
+
+    // Write FPS to top left
+    context.font = "bold 12px Arial";
+}
+
 // Load the model!
 console.log('beginning to load model');
 handpose.load().then(lmodel => {
@@ -172,4 +233,4 @@ handpose.load().then(lmodel => {
     console.log('camera model loaded!');
 })
 
-setInterval(capturePic, 1000)
+setInterval(capturePic, 3000)
