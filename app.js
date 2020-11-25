@@ -15,8 +15,8 @@ const modelParams = {
 
 const options = {
     maxSizeFactor: 0.5,     
-    heightScaleFactor: 0.20,
-    widthScaleFactor: 0.5,
+    heightScaleFactor: 0.25,
+    widthScaleFactor: 0.25,
 }
 
 function runDetectionImage(img) {
@@ -191,9 +191,12 @@ function renderPredictions(predictions, canvas, context, mediasource) {
         
         let { topLeft, bottomRight } = predictions[i].boundingBox
         
+        // get the bottom left point of the bounding box and its height/width
         let boundingBoxWidth = bottomRight[0] - topLeft[0]
         let boundingBoxHeight = topLeft[1] - bottomRight[1]
         let bottomLeft = [topLeft[0], topLeft[1] - boundingBoxHeight]
+
+        // calculate the change in width/height 
         const widthDecrease = boundingBoxWidth * options.widthScaleFactor;
         const heightDecrease = boundingBoxHeight * options.heightScaleFactor;
 
@@ -211,8 +214,8 @@ function renderPredictions(predictions, canvas, context, mediasource) {
 
         // draw a dot at the center of bounding box
         context.lineWidth = 3;
-        context.strokeStyle = '#0063FF';
-        context.fillStyle = "#0063FF"; // "rgba(244,247,251,1)";
+        context.strokeStyle = '#FF0000';
+        context.fillStyle = "#FF0000"; // "rgba(244,247,251,1)";
         context.fillRect(newPredictionBox[0] + (newPredictionBox[2] / 2), newPredictionBox[1] + (newPredictionBox[3] / 2), 5, 5);
 
         context.stroke();
@@ -220,10 +223,17 @@ function renderPredictions(predictions, canvas, context, mediasource) {
             predictions[i].handInViewConfidence.toFixed(3) + ' ' + " | hand",
             newPredictionBox[0] + 5,
             newPredictionBox[1] > 10 ? newPredictionBox[1] - 5 : 10);
+
+        // draw a dot at each of the landmarks
+        context.strokeStyle = '#FFFFFF';
+        context.fillStyle = '#FFFFFF';
+        for (let j = 0; j < predictions[i].landmarks.length; j++) {
+            context.fillRect(predictions[i].landmarks[j][0], predictions[i].landmarks[j][1], 5, 5);
+        }
     }
 
     // Write FPS to top left
-    context.font = "bold 12px Arial";
+    context.font = "bold 14px Candara";
 }
 
 // Load the model!
