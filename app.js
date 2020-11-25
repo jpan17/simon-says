@@ -26,13 +26,13 @@ function runDetectionImage(img) {
         predictions.forEach(prediction => {
             const boundingBox = prediction.bbox;
             // remove the really big ones
-            if (boundingBox[2] > width * maxSizeFactor || boundingBox[3] > height * maxSizeFactor) {
+            if (boundingBox[2] > width * options.maxSizeFactor || boundingBox[3] > height * options.maxSizeFactor) {
                 return;
             }
 
             // scale bounding box
-            const widthIncrease = boundingBox[2] * widthScaleFactor;
-            const heightIncrease = boundingBox[3] * heightScaleFactor;
+            const widthIncrease = boundingBox[2] * options.widthScaleFactor;
+            const heightIncrease = boundingBox[3] * options.heightScaleFactor;
             const newBoundingBox = [
                 boundingBox[0] - widthIncrease / 2,
                 boundingBox[1] - heightIncrease / 2,
@@ -52,13 +52,13 @@ function runDetectionImage(img) {
         context = testCanvas.getContext('2d')
         model.renderPredictions(newPredictions, testCanvas, context, img);
 
-        // save image from testCanvas to file
-        var a = document.createElement('a');
-        a.href = testCanvas.toDataURL();
-        a.download = 'prediction.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // // save image from testCanvas to file
+        // var a = document.createElement('a');
+        // a.href = testCanvas.toDataURL();
+        // a.download = 'prediction.png';
+        // document.body.appendChild(a);
+        // a.click();
+        // document.body.removeChild(a);
 
     });
 }
@@ -69,9 +69,14 @@ const cameraView = document.querySelector('#camera-view'),
     cameraSensor = document.querySelector('#camera-sensor'),
     startButton = document.querySelector('#start-button'),
     stopButton = document.querySelector('#stop-button'),
-    testCanvas = document.querySelector('#test-canvas')
+    testCanvas = document.querySelector('#test-canvas'),
+    seqDisplay = document.querySelector('#seq-display')
     
-let startGame = false
+// Game variables
+let startGame = false, 
+    sequence = [],
+    curTime = 0,
+    timePerSeq = 3
 
 // Access the device camera and stream to cameraView
 let cameraStart = () => {
@@ -94,6 +99,9 @@ startButton.onclick = () => {
 }
 stopButton.onclick = () => {
     startGame = false
+    console.log(`final score: ${sequence.length}, final time: ${curTime}`)
+    console.log('sequence: ')
+    console.table(sequence)
 }
 
 // Start the video stream when the window loads
@@ -108,12 +116,13 @@ let capturePic = () => {
         cameraOutput.src = cameraSensor.toDataURL('image/webp')
         runDetectionImage(cameraOutput)
         
-        //// Make sure the captured data is correct... imgData.data should be pixel values of each snapshot
-        // testCanvas.width = cameraView.videoWidth
-        // testCanvas.height = cameraView.videoHeight
-        // let imgData = cameraSensor.getContext('2d').getImageData(0, 0, cameraSensor.width, cameraSensor.height)
-        // testCanvas.getContext('2d').putImageData(imgData,0,0)
-        // console.log(imgData.data)
+        if (curTime % timePerSeq == 0) {
+            quadNum = Math.floor(Math.random() * 4)
+            fingNum = Math.floor(Math.random() * 6)
+            sequence.push(`${quadNum}${fingNum}`)
+            seqDisplay.innerHTML = `Next: ${sequence[sequence.length - 1]}`
+        }
+        curTime++
     }
 }
 

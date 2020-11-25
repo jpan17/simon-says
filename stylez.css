@@ -24,7 +24,7 @@ html, body {
     right: 20px;
 }
 
-#start-button, #stop-button {
+button, #seq-display {
     width: 200px;
     background-color: black;
     color: white;
@@ -35,14 +35,19 @@ html, body {
     padding: 15px 25px;
     text-align: center;
     position: fixed;
-    bottom: 50px;
     z-index: 3;
 }
 #start-button {
+    bottom: 50px;
     left: calc(50% - 250px);
 }
 #stop-button {
+    bottom: 50px;
     left: calc(50% + 50px);
+}
+#seq-display {
+    top: 50px;
+    left: calc(50% - 100px);
 }
 
 #test-canvas {
