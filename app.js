@@ -117,7 +117,7 @@ const cameraView = document.querySelector('#camera-view'),
 let startGame = false, 
     sequence = [],
     curTime = 0,
-    timePerSeq = 3
+    timePerSeq = 1
 
 // Access the device camera and stream to cameraView
 let cameraStart = () => {
@@ -288,4 +288,4 @@ handpose.load().then(lmodel => {
     console.log('camera model loaded!');
 })
 
-setInterval(capturePic, 3000)
+setInterval(capturePic, 1000 * timePerSeq)
