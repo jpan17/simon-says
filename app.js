@@ -1,3 +1,5 @@
+// const { traceDeprecation } = require("process");
+
 // Set constraints for the video stream
 var constraints = { video: { facingMode: 'user' }, audio: false }
 
@@ -6,7 +8,7 @@ var model = null;
 // define model parameters 
 const modelParams = {
     flipHorizontal: false,   // flip e.g for video  
-    maxNumBoxes: 20,        // maximum number of boxes to detect
+    maxNumBoxes: 3,        // maximum number of boxes to detect
     iouThreshold: 0.3,      // ioU threshold for non-max suppression
     scoreThreshold: 0.6,    // confidence threshold for predictions.
 }
@@ -21,6 +23,8 @@ function runDetectionImage(img) {
     model.estimateHands(img).then(predictions => {
         console.log(`Found ${predictions.length} hands`)
         console.log(predictions)
+        let ctx = testCanvas.getContext('2d')
+
         if (predictions.length > 0) {
             for (let i = 0; i < predictions.length; i++) {
                 const prediction = predictions[i]
@@ -35,19 +39,20 @@ function runDetectionImage(img) {
                 console.table(prediction.boundingBox)
 
                 // Draw diagonal of bounding box
-                let { topLeft, bottomRight } = prediction.boundingBox
-                let cw = cameraSensor.width, 
-                    ch = cameraSensor.height, 
-                    tw = testCanvas.width, 
-                    th = testCanvas.height
-                let ctx = testCanvas.getContext('2d')
-                ctx.beginPath()
-                // Multiply by tw/cw to rescale box from cameraSensor coords to testCanvas coords
-                // Btw I tested the coords directly on cameraSensor and the lines drawn were the same, so the rescaling should work
-                ctx.moveTo(Math.floor(topLeft[0] * tw / cw), Math.floor(topLeft[1] * th / ch))
-                ctx.lineTo(Math.floor(bottomRight[0] * tw / cw), Math.floor(bottomRight[1] * th / ch))
-                ctx.stroke()
+                // let { topLeft, bottomRight } = prediction.boundingBox
+                // let cw = cameraSensor.width, 
+                //     ch = cameraSensor.height, 
+                //     tw = testCanvas.width, 
+                //     th = testCanvas.height
+
+                // ctx.beginPath()
+                // // Multiply by tw/cw to rescale box from cameraSensor coords to testCanvas coords
+                // // Btw I tested the coords directly on cameraSensor and the lines drawn were the same, so the rescaling should work
+                // ctx.moveTo(Math.floor(topLeft[0] * tw / cw), Math.floor(topLeft[1] * th / ch))
+                // ctx.lineTo(Math.floor(bottomRight[0] * tw / cw), Math.floor(bottomRight[1] * th / ch))
+                // ctx.stroke()
             }
+            renderPredictions(predictions, testCanvas, ctx, img)
         } 
     })
 
@@ -165,6 +170,117 @@ let capturePic = () => {
     }
 }
 
+function renderPredictions(predictions, canvas, context, mediasource) {
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = mediasource.width;
+    canvas.height = mediasource.height;
+    // console.log("render", mediasource.width, mediasource.height)
+
+    context.save();
+    if (modelParams.flipHorizontal) {
+      context.scale(-1, 1);
+      context.translate(-mediasource.width, 0);
+    }
+    context.drawImage(mediasource, 0, 0, mediasource.width, mediasource.height);
+    context.restore();
+    context.font = '10px Arial';
+
+    // console.log('number of detections: ', predictions.length);
+    for (let i = 0; i < predictions.length; i++) {
+        
+        let { topLeft, bottomRight } = predictions[i].boundingBox
+        
+        // get the bottom left point of the bounding box and its height/width
+        let boundingBoxWidth = bottomRight[0] - topLeft[0]
+        let boundingBoxHeight = topLeft[1] - bottomRight[1]
+        let bottomLeft = [topLeft[0], topLeft[1] - boundingBoxHeight]
+
+        // calculate the change in width/height 
+        const widthDecrease = boundingBoxWidth * options.widthScaleFactor;
+        const heightDecrease = boundingBoxHeight * options.heightScaleFactor;
+
+        const newPredictionBox = [
+            bottomLeft[0] + widthDecrease / 2,
+            bottomLeft[1] + heightDecrease / 3,
+            boundingBoxWidth - widthDecrease,
+            boundingBoxHeight - heightDecrease,
+        ]
+
+        context.beginPath();
+        context.fillStyle = "rgba(255, 255, 255, 0.6)";
+        context.fillRect(newPredictionBox[0], newPredictionBox[1] - 17, newPredictionBox[2], 17);
+        context.rect(...newPredictionBox);
+
+        // draw a dot at the center of bounding box
+        context.lineWidth = 3;
+        context.strokeStyle = '#FFFFFF';
+        context.fillStyle = "#FFFFFF"; // "rgba(244,247,251,1)";
+        context.fillRect(newPredictionBox[0] + (newPredictionBox[2] / 2), newPredictionBox[1] + (newPredictionBox[3] / 2), 5, 5);
+
+        context.stroke();
+        context.fillText(
+            predictions[i].handInViewConfidence.toFixed(3) + ' ' + " | hand",
+            newPredictionBox[0] + 5,
+            newPredictionBox[1] > 10 ? newPredictionBox[1] - 5 : 10);
+
+        // draw a dot at each of the landmarks
+        // context.strokeStyle = '#FF0000;
+        // context.fillStyle = "#FF0000";
+        // for (let j = 0; j < predictions[i].landmarks.length; j++) {
+        //     context.fillRect(predictions[i].landmarks[j][0], predictions[i].landmarks[j][1], 5, 5);
+        // }
+
+
+        // draw dots at finger positions
+        colors = ['#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#FFFFFF']
+        // thumb
+        for (let t = 0; t < predictions[i].annotations.thumb.length; t++) {
+            context.strokeStyle = colors[0];
+            context.fillStyle = colors[0];
+            context.fillRect(predictions[i].annotations.thumb[t][0], predictions[i].annotations.thumb[t][1], 5, 5);
+        }
+
+        // indexFinger
+        for (let f = 0; f < predictions[i].annotations.indexFinger.length; f++) {
+            context.strokeStyle = colors[1];
+            context.fillStyle = colors[1];
+            context.fillRect(predictions[i].annotations.indexFinger[f][0], predictions[i].annotations.indexFinger[f][1], 5, 5);
+        }
+
+        // middleFinger
+        for (let m = 0; m < predictions[i].annotations.middleFinger.length; m++) {
+            context.strokeStyle = colors[2];
+            context.fillStyle = colors[2];
+            context.fillRect(predictions[i].annotations.middleFinger[m][0], predictions[i].annotations.middleFinger[m][1], 5, 5);
+        }
+
+        // ringFinger
+        for (let r = 0; r < predictions[i].annotations.ringFinger.length; r++) {
+            context.strokeStyle = colors[3];
+            context.fillStyle = colors[3];
+            context.fillRect(predictions[i].annotations.ringFinger[r][0], predictions[i].annotations.ringFinger[r][1], 5, 5);
+        }
+
+        // pinky
+        for (let p = 0; p < predictions[i].annotations.pinky.length; p++) {
+            context.strokeStyle = colors[4];
+            context.fillStyle = colors[4];
+            context.fillRect(predictions[i].annotations.pinky[p][0], predictions[i].annotations.pinky[p][1], 5, 5);
+        }
+
+        // palmbase
+        for (let b = 0; b < predictions[i].annotations.palmBase.length; b++) {
+            context.strokeStyle = colors[5];
+            context.fillStyle = colors[5];
+            context.fillRect(predictions[i].annotations.palmBase[b][0], predictions[i].annotations.palmBase[b][1], 5, 5);
+        }
+    }
+
+    // Write FPS to top left
+    context.font = "bold 14px Candara";
+}
+
 // Load the model!
 console.log('beginning to load model');
 handpose.load().then(lmodel => {
@@ -172,4 +288,4 @@ handpose.load().then(lmodel => {
     console.log('camera model loaded!');
 })
 
-setInterval(capturePic, 1000)
+setInterval(capturePic, 3000)
