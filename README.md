@@ -5,6 +5,9 @@
 * Face detection
 * Recorded / live video
 
+## Usage ##
+Navigate to this link and enable your webcam to play this game: https://jpan17.github.io/simon-says/
+
 ## Game Mechanics ##
 * Game 'tutor' generates sequence of actions
   - different hand gestures (holding up fingers)
