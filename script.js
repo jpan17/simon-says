@@ -16,6 +16,8 @@ getFileName = (g, n) => `http://127.0.0.1:8080/kinect_leap_dataset/acquisitions/
 
 handpose.load(modelParams).then(model => {
   g = gLow, n = nLow
+
+  // Using img to draw image on canvas
   img = new Image
   img.crossOrigin = 'anonymous'
   img.src = getFileName(g, n)
@@ -33,12 +35,21 @@ handpose.load(modelParams).then(model => {
         saveCanvas.width = newWidth
         saveCanvas.height = newHeight
         saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
+        
+        cropData = saveCanvas.toDataURL()
+
+        // Send cropped image to server and store as file
+        fetch('http://127.0.0.1:8000', {
+          method: 'POST', 
+          body: cropData
+        })
       }
       
       // Get next image
       g = n == nHigh ? g + 1 : g
       n = n == nHigh ? nLow : n + 1
-      if (g < gHigh || n < nHigh) img.src = getFileName(g, n) 
+      // UNCOMMENT THIS TO CYCLE THROUGH IMAGES
+      // if (g < gHigh || n < nHigh) img.src = getFileName(g, n) 
     })
   }
 
