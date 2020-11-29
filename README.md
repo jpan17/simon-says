@@ -1,9 +1,8 @@
 # simon-says
 
-## Data ##
+## Data and Resources ##
 * Hand gesture dataset (https://lttm.dei.unipd.it/downloads/gesture/)
-* Face detection
-* Recorded / live video
+* Handpose model (https://www.npmjs.com/package/@tensorflow-models/handpose)
 
 ## Usage ##
 Navigate to this link and enable your webcam to play this game: https://jpan17.github.io/simon-says/
