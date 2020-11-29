@@ -1,18 +1,33 @@
+/**
+ * Run this to serve image files: npx http-server -c1 --cors .
+ * Run this to run backend: node server.js
+ */
+
 const cameraSensor = document.querySelector('#camera-sensor'),
-      saveCanvas = document.querySelector('#save-canvas')
+      saveCanvas = document.querySelector('#save-canvas'),
+      stopButton = document.querySelector('#stop')
 cameraSensor.width = 1280
 cameraSensor.height = 960
 ctx = cameraSensor.getContext('2d')
 saveCtx = saveCanvas.getContext('2d')
 
-gLow = 1, gHigh = 10, nLow = 1, nHigh = 10
-modelParams = {
+const gLow = 1, gHigh = 10, nLow = 1, nHigh = 10
+const modelParams = {
   detectionConfidence: 0.1,
   iouThreshold: 0,
   scoreThreshold: 0
 }
+const settings = {
+  multiple: true, 
+  download: true,
+}
 
 getFileName = (g, n) => `http://127.0.0.1:8080/kinect_leap_dataset/acquisitions/P1/G${g}/${n}_rgb.png`
+
+stopButton.onclick = () => {
+  settings.multiple = false
+  settings.download = false
+}
 
 handpose.load(modelParams).then(model => {
   g = gLow, n = nLow
@@ -35,21 +50,32 @@ handpose.load(modelParams).then(model => {
         saveCanvas.width = newWidth
         saveCanvas.height = newHeight
         saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
-        
-        cropData = saveCanvas.toDataURL()
 
-        // Send cropped image to server and store as file
-        fetch('http://127.0.0.1:8000', {
-          method: 'POST', 
-          body: cropData
-        })
+        if (settings.download) {
+          a = document.createElement('a')
+          a.download = 'test.png'
+          a.href = saveCanvas.toDataURL()
+          a.textContent = 'Download PNG'
+          a.click()
+        }
+
+        // // Send cropped image to server and store as file
+        // blobData = saveCanvas.toBlob(blob => {
+        //   url = (URL || webkitURL).createObjectURL(blob)
+        //   console.log(url)
+        //   fetch('http://127.0.0.1:8000', {
+        //     method: 'POST', 
+        //     body: blobData
+        //   })
+        // })
       }
       
       // Get next image
       g = n == nHigh ? g + 1 : g
       n = n == nHigh ? nLow : n + 1
-      // UNCOMMENT THIS TO CYCLE THROUGH IMAGES
-      // if (g < gHigh || n < nHigh) img.src = getFileName(g, n) 
+      if (settings.multiple && (g < gHigh || n < nHigh)) {
+        img.src = getFileName(g, n) 
+      }
     })
   }
 
