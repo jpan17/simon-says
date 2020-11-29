@@ -1,4 +1,6 @@
 /**
+ * To run, open script.html
+ * IGNORE BELOW
  * Run this to serve image files: npx http-server -c1 --cors .
  * Run this to run backend: node server.js
  */
@@ -53,7 +55,7 @@ handpose.load(modelParams).then(model => {
 
         if (settings.download) {
           a = document.createElement('a')
-          a.download = 'test.png'
+          a.download = `${g}-${n}.png`
           a.href = saveCanvas.toDataURL()
           a.textContent = 'Download PNG'
           a.click()
