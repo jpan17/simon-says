@@ -20,12 +20,12 @@ const settings = {
 }
 const datasetSettings = {
   kinect: {
-    // p: 14, g: 10, n: 10
-    p: 2, g: 2, n: 2
+    p: 14, g: 10, n: 10
+    // p: 2, g: 2, n: 2
   },
   senz3d: {
-    // p: 4, g: 11, n: 30
-    p: 2, g: 2, n: 2
+    p: 4, g: 11, n: 30
+    // p: 2, g: 2, n: 2
   }
 }
 let onKinect = true, prefix = 'k'
