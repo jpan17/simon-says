@@ -1,7 +1,7 @@
 /**
  * To run, open script.html
- * IGNORE BELOW
  * Run this to serve image files: npx http-server -c1 --cors .
+ * IGNORE BELOW
  * Run this to run backend: node server.js
  */
 
@@ -13,18 +13,30 @@ cameraSensor.height = 960
 ctx = cameraSensor.getContext('2d')
 saveCtx = saveCanvas.getContext('2d')
 
-const gLow = 1, gHigh = 10, nLow = 1, nHigh = 10
-const modelParams = {
-  detectionConfidence: 0.1,
-  iouThreshold: 0,
-  scoreThreshold: 0
-}
 const settings = {
   multiple: true, 
   download: true,
+  customModelParams: false,
 }
+const datasetSettings = {
+  kinect: {
+    // p: 14, g: 10, n: 10
+    p: 2, g: 2, n: 2
+  },
+  senz3d: {
+    // p: 4, g: 11, n: 30
+    p: 2, g: 2, n: 2
+  }
+}
+let onKinect = true, prefix = 'k'
+const modelParams = settings.customModelParams ? {
+  detectionConfidence: 0.1,
+  iouThreshold: 0,
+  scoreThreshold: 0
+} : {}
 
-getFileName = (g, n) => `http://127.0.0.1:8080/kinect_leap_dataset/acquisitions/P1/G${g}/${n}_rgb.png`
+getFileName = (p, g, n, onKinect) => onKinect ? `http://127.0.0.1:8080/kinect_leap_dataset_FULL/acquisitions/P${p}/G${g}/${n}_rgb.png`
+                                              : `http://127.0.0.1:8080/senz3d_dataset/acquisitions/S${p}/G${g}/${n}-color.png`
 
 stopButton.onclick = () => {
   settings.multiple = false
@@ -32,17 +44,17 @@ stopButton.onclick = () => {
 }
 
 handpose.load(modelParams).then(model => {
-  g = gLow, n = nLow
+  p = 1, g = 1, n = 1
 
   // Using img to draw image on canvas
   img = new Image
   img.crossOrigin = 'anonymous'
-  img.src = getFileName(g, n)
+  img.src = getFileName(p, g, n, onKinect)
   img.onload = () => {
     ctx.drawImage(img, 0, 0)
     
     model.estimateHands(cameraSensor).then(predictions => {
-      console.log(`detected ${predictions.length} hands for ${g}-${n}`)
+      console.log(`detected ${predictions.length} hands for ${p}-${g}-${n}`)
       
       // Crop image to saveCanvas
       if (predictions.length > 0) {
@@ -53,9 +65,10 @@ handpose.load(modelParams).then(model => {
         saveCanvas.height = newHeight
         saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
 
+        // Download cropped image
         if (settings.download) {
           a = document.createElement('a')
-          a.download = `${g}-${n}.png`
+          a.download = `${prefix}-${p}-${g}-${n}.png`
           a.href = saveCanvas.toDataURL()
           a.textContent = 'Download PNG'
           a.click()
@@ -73,13 +86,20 @@ handpose.load(modelParams).then(model => {
       }
       
       // Get next image
-      g = n == nHigh ? g + 1 : g
-      n = n == nHigh ? nLow : n + 1
-      if (settings.multiple && (g < gHigh || n < nHigh)) {
-        img.src = getFileName(g, n) 
-      }
+      datasetLimit = onKinect ? datasetSettings.kinect : datasetSettings.senz3d
+      p = n == datasetLimit.n && g == datasetLimit.g ? p + 1 : p
+      g = n == datasetLimit.n ? g == datasetLimit.g ? 1 : g + 1 : g
+      n = n == datasetLimit.n ? 1 : n + 1
+      if (settings.multiple && p <= datasetLimit.p) {
+        img.src = getFileName(p, g, n, onKinect) 
+      } else if (settings.multiple && onKinect) {
+        onKinect = false
+        prefix = 's'
+        p = 1, g = 1, n = 1
+        cameraSensor.width = 640
+        cameraSensor.height = 480
+        img.src = getFileName(p, g, n, onKinect)
+      } 
     })
   }
-
-  
 })
