@@ -3,6 +3,7 @@
 ## Data and Resources ##
 * Hand gesture dataset (https://lttm.dei.unipd.it/downloads/gesture/)
 * Handpose model (https://www.npmjs.com/package/@tensorflow-models/handpose)
+* Bootstrap template (https://github.com/StartBootstrap/startbootstrap-creative)
 
 ## Usage ##
 Navigate to this link and enable your webcam to play this game: https://jpan17.github.io/simon-says/
