@@ -15,7 +15,8 @@ saveCtx = saveCanvas.getContext('2d')
 
 const settings = {
   multiple: true, 
-  download: true,
+  download: false,
+  keypointsToFile: true,
   customModelParams: false,
 }
 const datasetSettings = {
@@ -34,6 +35,7 @@ const modelParams = settings.customModelParams ? {
   iouThreshold: 0,
   scoreThreshold: 0
 } : {}
+let keypointsOutput = ''
 
 getFileName = (p, g, n, onKinect) => onKinect ? `http://127.0.0.1:8080/kinect_leap_dataset_FULL/acquisitions/P${p}/G${g}/${n}_rgb.png`
                                               : `http://127.0.0.1:8080/senz3d_dataset/acquisitions/S${p}/G${g}/${n}-color.png`
@@ -83,6 +85,11 @@ handpose.load(modelParams).then(model => {
         //     body: blobData
         //   })
         // })
+      
+        // Store keypoints to be outputted in file
+        if (settings.keypointsToFile) {
+          keypointsOutput += `${prefix}${g}_${p}${n}_${predictions[0].landmarks}\n`
+        }
       }
       
       // Get next image
@@ -91,15 +98,27 @@ handpose.load(modelParams).then(model => {
       g = n == datasetLimit.n ? g == datasetLimit.g ? 1 : g + 1 : g
       n = n == datasetLimit.n ? 1 : n + 1
       if (settings.multiple && p <= datasetLimit.p) {
+        // Get next image
         img.src = getFileName(p, g, n, onKinect) 
       } else if (settings.multiple && onKinect) {
+        // Start senz3d dataset
         onKinect = false
         prefix = 's'
         p = 1, g = 1, n = 1
         cameraSensor.width = 640
         cameraSensor.height = 480
         img.src = getFileName(p, g, n, onKinect)
-      } 
+      } else {
+        // Finished... print keypoints to output file on server
+        if (settings.keypointsToFile) {
+          fetch('http://127.0.0.1:8000', {
+            method: 'POST', 
+            body: keypointsOutput
+          })
+        }
+      }
     })
   }
 })
+
+        
