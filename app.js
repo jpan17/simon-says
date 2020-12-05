@@ -158,6 +158,7 @@ const cameraView = document.querySelector('#camera-view'),
     startButton = document.querySelector('#start-button'),
     stopButton = document.querySelector('#stop-button'),
     testCanvas = document.querySelector('#test-canvas'),
+    overlay = document.querySelector('#overlay'),
     seqDisplay = document.querySelector('#seq-display')
     
 // Game variables
@@ -165,6 +166,16 @@ let startGame = false,
     sequence = [],
     curTime = 0,
     timePerSeq = 1
+
+// Startup - draw quadrant lines
+let ctx = overlay.getContext('2d')
+let { width, height } = overlay
+ctx.beginPath()
+ctx.moveTo(width / 2 - 0.5, 0)  // subtract 0.5 so that line is 1px wide
+ctx.lineTo(width / 2 - 0.5, height)
+ctx.moveTo(0, height / 2 - 0.5)
+ctx.lineTo(width, height / 2 - 0.5)
+ctx.stroke()
 
 // Access the device camera and stream to cameraView
 let cameraStart = () => {

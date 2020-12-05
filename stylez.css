@@ -4,7 +4,7 @@ html, body {
   height: 100%;
   width: 100%;
 }
-#camera, #camera-view, #camera-sensor, #camera-output {
+#camera, #camera-view, #camera-sensor, #camera-output, #overlay {
     position: fixed;
     height: 100%;
     width: 100%;
@@ -12,6 +12,9 @@ html, body {
 }
 #camera-view, #camera-sensor, #camera-output {
     transform: scaleX(-1);
+}
+#overlay {
+    z-index: 2;
 }
 
 .camera-output-started {
