@@ -7,7 +7,7 @@ var model = null;
 
 // define model parameters 
 const modelParams = {
-    flipHorizontal: false,   // flip e.g for video  
+    flipHorizontal: true,   // flip e.g for video  
     maxNumBoxes: 3,        // maximum number of boxes to detect
     iouThreshold: 0.3,      // ioU threshold for non-max suppression
     scoreThreshold: 0.6,    // confidence threshold for predictions.
@@ -20,7 +20,7 @@ const options = {
 }
 
 function runDetectionImage(img) {
-    model.estimateHands(img).then(predictions => {
+    model.estimateHands(img, modelParams.flipHorizontal).then(predictions => {
         console.log(`Found ${predictions.length} hands`)
         console.log(predictions)
         let ctx = testCanvas.getContext('2d')
