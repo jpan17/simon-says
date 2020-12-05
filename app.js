@@ -172,6 +172,9 @@ let startGame = false,
 let ctx = overlay.getContext('2d')
 let { width, height } = overlay
 ctx.beginPath()
+ctx.lineWidth = 1;
+// ctx.strokeStyle = '#90FFFFFF';
+ctx.setLineDash([5, 10]);
 ctx.moveTo(width / 2 - 0.5, 0)  // subtract 0.5 so that line is 1px wide
 ctx.lineTo(width / 2 - 0.5, height)
 ctx.moveTo(0, height / 2 - 0.5)
@@ -231,8 +234,9 @@ let capturePic = () => {
 
             // Display hand outline
             let ctx = handOverlay.getContext('2d')
-            img = new Image
-            img.src = 'https://icon2.cleanpng.com/20180816/qhv/kisspng-thumb-vector-graphics-hand-clip-art-finger-5b76405aaa6b99.6191925515344763786981.jpg'
+            img = new Image()
+            // img.src = 'https://icon2.cleanpng.com/20180816/qhv/kisspng-thumb-vector-graphics-hand-clip-art-finger-5b76405aaa6b99.6191925515344763786981.jpg'
+            img.src = 'overlays/' + numFingers + '.png'
             img.onload = () => {
                 ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
                 startPoint = [handOverlay.width / 2 * (quadrant % 2), handOverlay.height / 2 * Math.floor(quadrant / 2)]
