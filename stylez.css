@@ -4,7 +4,7 @@ html, body {
   height: 100%;
   width: 100%;
 }
-#camera, #camera-view, #camera-sensor, #camera-output, #overlay {
+#camera, #camera-view, #camera-sensor, #camera-output, #overlay, #hand-overlay {
     position: fixed;
     height: 100%;
     width: 100%;
@@ -13,7 +13,8 @@ html, body {
 #camera-view, #camera-sensor, #camera-output {
     transform: scaleX(-1);
 }
-#overlay {
+#overlay, #hand-overlay {
+    mix-blend-mode: multiply;
     z-index: 2;
 }
 

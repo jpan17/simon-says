@@ -159,6 +159,7 @@ const cameraView = document.querySelector('#camera-view'),
     stopButton = document.querySelector('#stop-button'),
     testCanvas = document.querySelector('#test-canvas'),
     overlay = document.querySelector('#overlay'),
+    handOverlay = document.querySelector('#hand-overlay'),
     seqDisplay = document.querySelector('#seq-display')
     
 // Game variables
@@ -227,6 +228,16 @@ let capturePic = () => {
                 numFingers,
             });
             seqDisplay.innerHTML = `Next: ${quadrant}${numFingers}`;
+
+            // Display hand outline
+            let ctx = handOverlay.getContext('2d')
+            img = new Image
+            img.src = 'https://icon2.cleanpng.com/20180816/qhv/kisspng-thumb-vector-graphics-hand-clip-art-finger-5b76405aaa6b99.6191925515344763786981.jpg'
+            img.onload = () => {
+                ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
+                startPoint = [handOverlay.width / 2 * (quadrant % 2), handOverlay.height / 2 * Math.floor(quadrant / 2)]
+                ctx.drawImage(img, startPoint[0], startPoint[1], handOverlay.width / 2, handOverlay.height / 2)
+            }
         }
         curTime++
     }
