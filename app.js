@@ -235,7 +235,6 @@ let capturePic = () => {
             // Display hand outline
             let ctx = handOverlay.getContext('2d')
             img = new Image()
-            // img.src = 'https://icon2.cleanpng.com/20180816/qhv/kisspng-thumb-vector-graphics-hand-clip-art-finger-5b76405aaa6b99.6191925515344763786981.jpg'
             img.src = 'overlays/' + numFingers + '.png'
             img.onload = () => {
                 ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
