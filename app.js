@@ -19,6 +19,53 @@ const options = {
     widthScaleFactor: 0.25,
 }
 
+// 0 - Top left
+// 1 - Top right
+// 2 - Bottom left
+// 3 - Bottom right
+function checkQuadrant(img, boundingBox, quadrant) {
+    // Find center of bounding box
+    const { topLeft: tl, bottomRight: br } = boundingBox;
+    const bboxCenter = [(tl[0] + br[0]) / 2, (tl[1] + br[1]) / 2];
+    
+    // Find center of image
+    const { width, height } = img;
+    const imgCenter = [width / 2, height / 2];
+
+    // Check correctness
+    switch(quadrant) {
+        case 0:
+            return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
+        case 1:
+            return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
+        case 2:
+            return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
+        case 3:
+            return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
+        default:
+            return false;
+    }
+}
+
+// This will probably return a promise
+function checkFinger(img, prediction, numFingers) {
+    return true;
+}
+
+function checkQuadrantAndFinger(img, prediction, target) {
+    const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
+    return quadrantCorrect && checkFinger(img, prediction, target.numFingers);    
+}
+
+function checkImage(img, target) {
+    return model.estimateHands(img, modelParams.flipHorizontal).then(predictions => 
+        predictions.map(p => checkQuadrantAndFinger(img, p, target))
+    ).then(checks => {
+        console.log(`Correct: ${checks[0]}`);
+        return checks[0];
+    })
+}
+
 function runDetectionImage(img) {
     model.estimateHands(img, modelParams.flipHorizontal).then(predictions => {
         console.log(`Found ${predictions.length} hands`)
@@ -157,14 +204,18 @@ let capturePic = () => {
         cameraOutput.src = cameraSensor.toDataURL('image/webp')
         if (model) {
             // Not sure why, but doesn't work on cameraOutput
-            runDetectionImage(cameraSensor)
+            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
+            checkImage(cameraSensor, sequence[sequence.length - 1]);
         }
         
         if (curTime % timePerSeq == 0) {
-            quadNum = Math.floor(Math.random() * 4)
-            fingNum = Math.floor(Math.random() * 6)
-            sequence.push(`${quadNum}${fingNum}`)
-            seqDisplay.innerHTML = `Next: ${sequence[sequence.length - 1]}`
+            const quadrant = Math.floor(Math.random() * 4)
+            const numFingers = Math.floor(Math.random() * 6)
+            sequence.push({
+                quadrant,
+                numFingers,
+            });
+            seqDisplay.innerHTML = `Next: ${quadrant}${numFingers}`;
         }
         curTime++
     }
