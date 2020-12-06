@@ -41,13 +41,17 @@ const cameraView = document.querySelector('#camera-view'),
     overlay = document.querySelector('#overlay'),
     handOverlay = document.querySelector('#hand-overlay'),
     seqDisplay = document.querySelector('#seq-display'), 
-    middleText = document.querySelector('#middle-text')
+    middleText = document.querySelector('#middle-text'),
+    middleDisplay = document.querySelector('#middle-display'),
+    infoDisplay = document.querySelector('#info-display')
 
 // Start and stop game
 startButton.onclick = () => {
     resetGameVars()
     inGame = true
     cameraOutput.classList.add('camera-output-started')
+    middleDisplay.classList.remove('hide')
+    infoDisplay.classList.add('hide')
 }
 stopButton.onclick = () => {
     endGame()
@@ -160,9 +164,10 @@ function capturePic() {
                 runDetectionImage(cameraSensor, sequence[curSeq])
                 checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
                     if (!validImage) {
-                        endGame()
-                        displayText = '❌'
+                        // displayText = '❌'
+                        displayText = '...'
                         middleText.innerHTML = displayText
+                        endGame()
                     } else {
                         console.log(`CORRECT!!!! ${curSeq}`)
                         displayText = '✔'

@@ -3,6 +3,7 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
 }
 #camera, #camera-view, #camera-sensor, #camera-output, #overlay, #hand-overlay {
     position: fixed;
@@ -59,7 +60,6 @@ button, #seq-display {
     background-color: #dddddd77;
     color: black;
     font-size: 48px;
-    font-family: Arial, Helvetica, sans-serif;
     font-weight: bold;
     border-radius: 100px;
     border: none;
@@ -74,6 +74,28 @@ button, #seq-display {
 #middle-text {
     margin-top: 69px;
     height: 100%;
+}
+#info-display {
+    display: flex;
+    flex-direction: column;
+    width: 50%; 
+    height: 50%;
+    background-color: #aaaaaacc;
+    color: black;
+    font-size: 36px;
+    border-radius: 25px;
+    outline: 0;
+    z-index: 3;
+    position: fixed;
+    top: 25%;
+    left: 25%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    line-height: 100px;
+}
+.hide {
+    visibility: hidden;
 }
 
 #test-canvas {

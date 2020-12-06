@@ -250,4 +250,8 @@ function endGame() {
   console.log(`final score: ${score}, final time: ${curTime}`)
   console.log('sequence: ')
   console.table(sequence)
+  infoDisplay.classList.remove('hide')
+  middleDisplay.classList.add('hide')
+  infoDisplay.children[0].innerHTML = `final score: ${Math.max(score, 0)}`
+  infoDisplay.children[1].innerHTML = `time lasted: ${curTime}`
 }
