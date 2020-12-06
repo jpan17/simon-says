@@ -1,9 +1,14 @@
 import sys
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 
-def load_training_test_data():
-    pass
+def load_train_test_data():
+    samples, labels = load_data()
+    
+    # Split dataset into training set and test set (80%/20%)
+    train_data, test_data, train_label, test_label = train_test_split(samples, labels, test_size=0.2, random_state=1)
+    return train_data.T, train_label, test_data.T, test_label
 
 def normalize(keypoints):
     
@@ -38,7 +43,9 @@ def load_data():
         
         # ground truth
         first_string = coordinates[0].split('_')
-        labels.append(first_string[0])
+        # decide what you want to do with the classifier labels, for now label them all '1'
+        # labels.append(first_string[0])
+        labels.append(1)
         coordinates[0] = first_string[2]
         
         # split coordinates into respective keypoints
@@ -50,10 +57,14 @@ def load_data():
         keypoints = normalize(keypoints)
         samples.append(keypoints)
     
-    samples = np.asfarray(samples).T 
+    samples = np.asfarray(samples)
     labels = np.array(labels)
-    print("Data shape:", samples.T.shape)   
+    # Not sure if this is actually needed, code seems to work without
+    # samples = np.array([[[ [k] for k in samples[i][j] ] for j in range(len(samples[i]))] for i in range(len(samples))])
+    print("Data shape:", samples.shape)
     print("Labels shape:", labels.shape)   
     
+    return samples, labels
+    
 if __name__ == '__main__':
-    load_data()
+    load_train_test_data()
