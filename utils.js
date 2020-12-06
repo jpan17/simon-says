@@ -91,6 +91,12 @@ function getNextSeq() {
   return { numFingers, quadrant }
 }
 
+// Remove hand outline
+function clearHandOutline() {
+  let ctx = handOverlay.getContext('2d')
+  ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
+}
+
 // Display hand outline with fingers and in quadrant
 function displayHandOutline(numFingers, quadrant) {
   let ctx = handOverlay.getContext('2d')
@@ -226,4 +232,22 @@ function renderPredictions(predictions, canvas, context, mediasource) {
 
   // Write FPS to top left
   context.font = "bold 14px Candara";
+}
+
+function resetGameVars() {
+  sequence = []
+  curTime = 0
+  curSeq = 0
+  inGame = false
+  pauseTime = 0
+  totalPauseTime = 0
+}
+
+// End the game and display final stats
+function endGame() {
+  inGame = false
+  const score = sequence.length - 1
+  console.log(`final score: ${score}, final time: ${curTime}`)
+  console.log('sequence: ')
+  console.table(sequence)
 }

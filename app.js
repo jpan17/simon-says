@@ -6,10 +6,14 @@ var constraints = { video: { facingMode: 'user' }, audio: false }
 var model = null;
     
 // Game variables
-let startGame = false, 
-    sequence = [],
-    curTime = 0,
-    timePerSeq = 1
+let timePerSeq = 2,
+    inGame,
+    sequence, 
+    curTime, 
+    curSeq, 
+    pauseTime, 
+    totalPauseTime
+resetGameVars()
 
 // Model parameters 
 const modelParams = {
@@ -24,6 +28,7 @@ const options = {
     maxSizeFactor: 0.5,     
     heightScaleFactor: 0.25,
     widthScaleFactor: 0.25,
+    newHandPauseTime: 2
 }
 
 // HTML elements
@@ -39,14 +44,12 @@ const cameraView = document.querySelector('#camera-view'),
 
 // Start and stop game
 startButton.onclick = () => {
-    startGame = true
+    resetGameVars()
+    inGame = true
     cameraOutput.classList.add('camera-output-started')
 }
 stopButton.onclick = () => {
-    startGame = false
-    console.log(`final score: ${sequence.length}, final time: ${curTime}`)
-    console.log('sequence: ')
-    console.table(sequence)
+    endGame()
 }
 
 drawQuadrantLines(overlay)
@@ -92,8 +95,8 @@ function checkQuadrant(img, boundingBox, quadrant) {
 // This will probably return a promise
 function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
-  console.log('Landmarks for model:')
-  console.log(landmarks);
+//   console.log('Landmarks for model:')
+//   console.log(landmarks);
   // Pass these landmarks to the model
   return true;
 }
@@ -108,16 +111,17 @@ function checkImage(img, target) {
   return model.estimateHands(img, modelParams.flipHorizontal).then(predictions => 
       predictions.map(p => checkQuadrantAndFinger(img, p, target))
   ).then(checks => {
-      console.log(`Correct: ${checks[0]}`);
-      return checks[0];
+    //   console.log(`Correct hand #${curSeq}: ${checks[0]}`);
+      return false || checks[0] ;
   })
 }
 
+// ONLY FOR DEBUGGING PURPOSES
 // Detect hands with model
 function runDetectionImage(img) {
     model.estimateHands(img, modelParams.flipHorizontal).then(predictions => {
-        console.log(`Found ${predictions.length} hands`)
-        console.log(predictions)
+        // console.log(`Found ${predictions.length} hands`)
+        // console.log(predictions)
         let ctx = testCanvas.getContext('2d')
         if (predictions.length > 0) {
             renderPredictions(predictions, testCanvas, ctx, img)
@@ -127,21 +131,43 @@ function runDetectionImage(img) {
 
 // Take snapshot
 function capturePic() {
-    if (startGame) {
+    if (inGame) {
         cameraSensor.width = cameraView.videoWidth
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
         cameraOutput.src = cameraSensor.toDataURL('image/webp')
-        
-        if (curTime % timePerSeq == 0) {
-            let { numFingers, quadrant } = getNextSeq()
-            displayHandOutline(numFingers, quadrant)            
-        }
 
-        if (model) {
-            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
-            checkImage(cameraSensor, sequence[sequence.length - 1]) 
+        // Generate new hand
+        if (curSeq == sequence.length) {
+            let { numFingers, quadrant } = getNextSeq()
+            displayHandOutline(numFingers, quadrant)
+            pauseTime = options.newHandPauseTime
+            curSeq = 0
         }
+        
+        // Check for next hand in sequence
+        if (pauseTime > 0) {
+            pauseTime--
+            totalPauseTime++
+            console.log(`pause remaining: ${pauseTime}`)
+        } else if ((curTime - totalPauseTime) % timePerSeq == 0) {
+            clearHandOutline()
+            if (model) {
+                runDetectionImage(cameraSensor, sequence[curSeq])
+                checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
+                    if (!validImage) {
+                        endGame()
+                    } else {
+                        console.log(`CORRECT!!!! ${curSeq}`)
+                    }
+                })
+            }
+            curSeq++
+        } else {
+            clearHandOutline()
+            console.log('detecting...')
+        }
+        
         curTime++
     }
 }
