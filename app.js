@@ -40,7 +40,8 @@ const cameraView = document.querySelector('#camera-view'),
     testCanvas = document.querySelector('#test-canvas'),
     overlay = document.querySelector('#overlay'),
     handOverlay = document.querySelector('#hand-overlay'),
-    seqDisplay = document.querySelector('#seq-display')
+    seqDisplay = document.querySelector('#seq-display'), 
+    middleText = document.querySelector('#middle-text')
 
 // Start and stop game
 startButton.onclick = () => {
@@ -142,32 +143,41 @@ function capturePic() {
             let { numFingers, quadrant } = getNextSeq()
             displayHandOutline(numFingers, quadrant)
             pauseTime = options.newHandPauseTime
+            displayText = pauseTime
             curSeq = 0
         }
         
         // Check for next hand in sequence
         if (pauseTime > 0) {
+            displayText = pauseTime
             pauseTime--
             totalPauseTime++
             console.log(`pause remaining: ${pauseTime}`)
         } else if ((curTime - totalPauseTime) % timePerSeq == 0) {
             clearHandOutline()
+            displayText = (curTime - totalPauseTime) % timePerSeq
             if (model) {
                 runDetectionImage(cameraSensor, sequence[curSeq])
                 checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
                     if (!validImage) {
                         endGame()
+                        displayText = '❌'
+                        middleText.innerHTML = displayText
                     } else {
                         console.log(`CORRECT!!!! ${curSeq}`)
+                        displayText = '✔'
+                        middleText.innerHTML = displayText
                     }
                 })
             }
             curSeq++
         } else {
             clearHandOutline()
+            displayText = '...'
             console.log('detecting...')
         }
         
+        middleText.innerHTML = displayText
         curTime++
     }
 }
