@@ -2,6 +2,7 @@
 
 ## Data and Resources ##
 * Hand gesture dataset (https://lttm.dei.unipd.it/downloads/gesture/)
+* Kaggle gesture dataset (https://www.kaggle.com/koryakinp/fingers)
 * Handpose model (https://www.npmjs.com/package/@tensorflow-models/handpose)
 * Bootstrap template (https://github.com/StartBootstrap/startbootstrap-creative)
 
