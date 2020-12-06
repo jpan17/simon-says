@@ -4,48 +4,39 @@
 var constraints = { video: { facingMode: 'user' }, audio: false }
 
 var model = null;
+    
+// Game variables
+let startGame = false, 
+    sequence = [],
+    curTime = 0,
+    timePerSeq = 1
 
-// define model parameters 
+// Model parameters 
 const modelParams = {
     flipHorizontal: true,   // flip e.g for video  
-    maxNumBoxes: 3,        // maximum number of boxes to detect
+    maxNumBoxes: 3,         // maximum number of boxes to detect
     iouThreshold: 0.3,      // ioU threshold for non-max suppression
     scoreThreshold: 0.6,    // confidence threshold for predictions.
 }
 
+// Misc options
 const options = {
     maxSizeFactor: 0.5,     
     heightScaleFactor: 0.25,
     widthScaleFactor: 0.25,
 }
 
-// 0 - Top left
-// 1 - Top right
-// 2 - Bottom left
-// 3 - Bottom right
-function checkQuadrant(img, boundingBox, quadrant) {
-    // Find center of bounding box
-    const { topLeft: tl, bottomRight: br } = boundingBox;
-    const bboxCenter = [(tl[0] + br[0]) / 2, (tl[1] + br[1]) / 2];
-    
-    // Find center of image
-    const { width, height } = img;
-    const imgCenter = [width / 2, height / 2];
+// HTML elements
+const cameraView = document.querySelector('#camera-view'),
+    cameraOutput = document.querySelector('#camera-output'),
+    cameraSensor = document.querySelector('#camera-sensor'),
+    startButton = document.querySelector('#start-button'),
+    stopButton = document.querySelector('#stop-button'),
+    testCanvas = document.querySelector('#test-canvas'),
+    overlay = document.querySelector('#overlay'),
+    handOverlay = document.querySelector('#hand-overlay'),
+    seqDisplay = document.querySelector('#seq-display')
 
-    // Check correctness
-    switch(quadrant) {
-        case 0:
-            return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
-        case 1:
-            return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
-        case 2:
-            return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
-        case 3:
-            return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
-        default:
-            return false;
-    }
-}
 
 // Get distance from this point to the origin
 function getDist(p1, p2) {
@@ -112,6 +103,34 @@ function normalizePredictions(prediction) {
     return landmarks.map(centerLandmark).map(applyRotation).map(scaleDown);
 }
 
+// 0 - Top left
+// 1 - Top right
+// 2 - Bottom left
+// 3 - Bottom right
+function checkQuadrant(img, boundingBox, quadrant) {
+    // Find center of bounding box
+    const { topLeft: tl, bottomRight: br } = boundingBox;
+    const bboxCenter = [(tl[0] + br[0]) / 2, (tl[1] + br[1]) / 2];
+    
+    // Find center of image
+    const { width, height } = img;
+    const imgCenter = [width / 2, height / 2];
+
+    // Check correctness
+    switch(quadrant) {
+        case 0:
+            return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
+        case 1:
+            return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
+        case 2:
+            return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
+        case 3:
+            return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
+        default:
+            return false;
+    }
+}
+
 // This will probably return a promise
 function checkFinger(img, prediction, numFingers) {
     const landmarks = normalizePredictions(prediction);
@@ -135,120 +154,32 @@ function checkImage(img, target) {
     })
 }
 
-function runDetectionImage(img) {
-    model.estimateHands(img, modelParams.flipHorizontal).then(predictions => {
-        console.log(`Found ${predictions.length} hands`)
-        console.log(predictions)
-        let ctx = testCanvas.getContext('2d')
-
-        if (predictions.length > 0) {
-            for (let i = 0; i < predictions.length; i++) {
-                const prediction = predictions[i]
-                //// Log hand keypoints.
-                // const keypoints = predictions[i].landmarks;
-                // for (let i = 0; i < keypoints.length; i++) {
-                //     const [x, y, z] = keypoints[i];
-                //     console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
-                // }
-                // console.log(`Confidence scores: ${prediction.handInViewConfidence}`)
-                // console.log(`Bounding Box:`)
-                // console.table(prediction.boundingBox)
-
-                // Draw diagonal of bounding box
-                // let { topLeft, bottomRight } = prediction.boundingBox
-                // let cw = cameraSensor.width, 
-                //     ch = cameraSensor.height, 
-                //     tw = testCanvas.width, 
-                //     th = testCanvas.height
-
-                // ctx.beginPath()
-                // // Multiply by tw/cw to rescale box from cameraSensor coords to testCanvas coords
-                // // Btw I tested the coords directly on cameraSensor and the lines drawn were the same, so the rescaling should work
-                // ctx.moveTo(Math.floor(topLeft[0] * tw / cw), Math.floor(topLeft[1] * th / ch))
-                // ctx.lineTo(Math.floor(bottomRight[0] * tw / cw), Math.floor(bottomRight[1] * th / ch))
-                // ctx.stroke()
-            }
-            renderPredictions(predictions, testCanvas, ctx, img)
-        } 
-    })
-
-    /**
-     * Code for HandTrack.js and bounding boxes below
-     */
-    // const height = img.height;
-    // const width = img.width;
-
-    // model.detect(img).then(predictions => {
-    //     var newPredictions = []
-    //     predictions.forEach(prediction => {
-    //         const boundingBox = prediction.bbox;
-    //         // remove the really big ones
-    //         if (boundingBox[2] > width * options.maxSizeFactor || boundingBox[3] > height * options.maxSizeFactor) {
-    //             return;
-    //         }
-
-    //         // scale bounding box
-    //         const widthIncrease = boundingBox[2] * options.widthScaleFactor;
-    //         const heightIncrease = boundingBox[3] * options.heightScaleFactor;
-    //         const newBoundingBox = [
-    //             boundingBox[0] - widthIncrease / 2,
-    //             boundingBox[1] - heightIncrease / 2,
-    //             boundingBox[2] + widthIncrease,
-    //             boundingBox[3] + heightIncrease,
-    //         ]
-    //         prediction.bbox = newBoundingBox;
-    //         newPredictions.push(prediction);
-    //     })
-
-    //     // skip image if no predictions remain
-    //     if (newPredictions.length === 0) {
-    //         return;
-    //     }
-        
-    //     // draw bounding box into testCanvas
-    //     context = testCanvas.getContext('2d')
-    //     model.renderPredictions(newPredictions, testCanvas, context, img);
-
-    //     // // save image from testCanvas to file
-    //     // var a = document.createElement('a');
-    //     // a.href = testCanvas.toDataURL();
-    //     // a.download = 'prediction.png';
-    //     // document.body.appendChild(a);
-    //     // a.click();
-    //     // document.body.removeChild(a);
-
-    // });
-}
-
-// Define constants
-const cameraView = document.querySelector('#camera-view'),
-    cameraOutput = document.querySelector('#camera-output'),
-    cameraSensor = document.querySelector('#camera-sensor'),
-    startButton = document.querySelector('#start-button'),
-    stopButton = document.querySelector('#stop-button'),
-    testCanvas = document.querySelector('#test-canvas'),
-    overlay = document.querySelector('#overlay'),
-    handOverlay = document.querySelector('#hand-overlay'),
-    seqDisplay = document.querySelector('#seq-display')
-    
-// Game variables
-let startGame = false, 
-    sequence = [],
-    curTime = 0,
-    timePerSeq = 1
-
 // Startup - draw quadrant lines
-let ctx = overlay.getContext('2d')
-let { width, height } = overlay
-ctx.beginPath()
-ctx.lineWidth = 1;
-// ctx.strokeStyle = '#90FFFFFF';
-ctx.setLineDash([5, 10]);
-ctx.moveTo(width / 2 - 0.5, 0)  // subtract 0.5 so that line is 1px wide
-ctx.lineTo(width / 2 - 0.5, height)
-ctx.moveTo(0, height / 2 - 0.5)
-ctx.lineTo(width, height / 2 - 0.5)
-ctx.stroke()
+function drawQuadrantLines(overlay) {
+    let ctx = overlay.getContext('2d')
+    let { width, height } = overlay
+    ctx.beginPath()
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 10]);
+    ctx.moveTo(width / 2 - 0.5, 0)  // subtract 0.5 so that line is 1px wide
+    ctx.lineTo(width / 2 - 0.5, height)
+    ctx.moveTo(0, height / 2 - 0.5)
+    ctx.lineTo(width, height / 2 - 0.5)
+    ctx.stroke()
+}
+drawQuadrantLines(overlay)
+
+// Start and stop game
+startButton.onclick = () => {
+    startGame = true
+    cameraOutput.classList.add('camera-output-started')
+}
+stopButton.onclick = () => {
+    startGame = false
+    console.log(`final score: ${sequence.length}, final time: ${curTime}`)
+    console.log('sequence: ')
+    console.table(sequence)
+}
 
 // Access the device camera and stream to cameraView
 let cameraStart = () => {
@@ -264,58 +195,10 @@ let cameraStart = () => {
         })
 }
 
-// Start and stop game
-startButton.onclick = () => {
-    startGame = true
-    cameraOutput.classList.add('camera-output-started')
-}
-stopButton.onclick = () => {
-    startGame = false
-    console.log(`final score: ${sequence.length}, final time: ${curTime}`)
-    console.log('sequence: ')
-    console.table(sequence)
-}
-
 // Start the video stream when the window loads
 window.addEventListener('load', cameraStart)
 
-// Take snapshot
-let capturePic = () => {
-    if (startGame) {
-        cameraSensor.width = cameraView.videoWidth
-        cameraSensor.height = cameraView.videoHeight
-        cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
-        cameraOutput.src = cameraSensor.toDataURL('image/webp')
-        
-        if (curTime % timePerSeq == 0) {
-            const quadrant = Math.floor(Math.random() * 4)
-            const numFingers = Math.floor(Math.random() * 6)
-            sequence.push({
-                quadrant,
-                numFingers,
-            });
-            seqDisplay.innerHTML = `Next: ${quadrant}${numFingers}`;
-
-            // Display hand outline
-            let ctx = handOverlay.getContext('2d')
-            img = new Image()
-            img.src = 'overlays/' + numFingers + '.png'
-            img.onload = () => {
-                ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
-                startPoint = [handOverlay.width / 2 * (quadrant % 2), handOverlay.height / 2 * Math.floor(quadrant / 2)]
-                ctx.drawImage(img, startPoint[0], startPoint[1], handOverlay.width / 2, handOverlay.height / 2)
-            }
-        }
-
-        if (model) {
-            // Not sure why, but doesn't work on cameraOutput
-            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
-            checkImage(cameraSensor, sequence[sequence.length - 1]);
-        }
-        curTime++
-    }
-}
-
+// Draw predictions in upper right box
 function renderPredictions(predictions, canvas, context, mediasource) {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -377,7 +260,6 @@ function renderPredictions(predictions, canvas, context, mediasource) {
         //     context.fillRect(predictions[i].landmarks[j][0], predictions[i].landmarks[j][1], 5, 5);
         // }
 
-
         // draw dots at finger positions
         colors = ['#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#FFFFFF']
         // thumb
@@ -425,6 +307,55 @@ function renderPredictions(predictions, canvas, context, mediasource) {
 
     // Write FPS to top left
     context.font = "bold 14px Candara";
+}
+
+// Detect hands with model
+function runDetectionImage(img) {
+    model.estimateHands(img, modelParams.flipHorizontal).then(predictions => {
+        console.log(`Found ${predictions.length} hands`)
+        console.log(predictions)
+        let ctx = testCanvas.getContext('2d')
+        if (predictions.length > 0) {
+            renderPredictions(predictions, testCanvas, ctx, img)
+        } 
+    })
+}
+
+// Take snapshot
+function capturePic() {
+    if (startGame) {
+        cameraSensor.width = cameraView.videoWidth
+        cameraSensor.height = cameraView.videoHeight
+        cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
+        cameraOutput.src = cameraSensor.toDataURL('image/webp')
+        
+        if (curTime % timePerSeq == 0) {
+            const quadrant = Math.floor(Math.random() * 4)
+            const numFingers = Math.floor(Math.random() * 6)
+            sequence.push({
+                quadrant,
+                numFingers,
+            });
+            seqDisplay.innerHTML = `Next: ${quadrant}${numFingers}`;
+
+            // Display hand outline
+            let ctx = handOverlay.getContext('2d')
+            img = new Image()
+            img.src = 'overlays/' + numFingers + '.png'
+            img.onload = () => {
+                ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
+                startPoint = [handOverlay.width / 2 * (quadrant % 2), handOverlay.height / 2 * Math.floor(quadrant / 2)]
+                ctx.drawImage(img, startPoint[0], startPoint[1], handOverlay.width / 2, handOverlay.height / 2)
+            }
+        }
+
+        if (model) {
+            // Not sure why, but doesn't work on cameraOutput
+            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
+            checkImage(cameraSensor, sequence[sequence.length - 1]);
+        }
+        curTime++
+    }
 }
 
 // Load the model!
