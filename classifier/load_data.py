@@ -32,6 +32,8 @@ def load_data():
     
     n = len(lines)
 
+    # gesture dictionary
+    gesture_labels = {'s1':1, 's2':2, 's3':3, 's4':5, 's5':0, 's6':2, 's7':1, 's8':4, 's9':3, 's10':1, 's11':1, 'k1':0, 'k2':1, 'k3':1, 'k4':2, 'k5':2, 'k6':3, 'k7':2, 'k8':3, 'k9':5, 'k10':3}
     samples = []
     labels = []
     
@@ -44,8 +46,7 @@ def load_data():
         # ground truth
         first_string = coordinates[0].split('_')
         # decide what you want to do with the classifier labels, for now label them all '1'
-        # labels.append(first_string[0])
-        labels.append(1)
+        labels.append(gesture_labels[first_string[0]])
         coordinates[0] = first_string[2]
         
         # split coordinates into respective keypoints
@@ -55,6 +56,7 @@ def load_data():
         # normalize using palm base as origin
         keypoints = np.asfarray(keypoints)
         keypoints = normalize(keypoints)
+        keypoints = np.reshape(keypoints, (1, 3, 21))
         samples.append(keypoints)
     
     samples = np.asfarray(samples)

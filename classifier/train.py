@@ -58,8 +58,8 @@ def train(model, input, label, params, numIters):
     prev_weights = [None] * len(model['layers'])
     momentum = 0.5
     
-    step_size_training = 500
-    step_size_testing = 1000
+    step_size_training = 50
+    step_size_testing = 200
     training_loss = []
     testing_loss = []
     
