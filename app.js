@@ -47,8 +47,77 @@ function checkQuadrant(img, boundingBox, quadrant) {
     }
 }
 
+// Get distance from this point to the origin
+function getDist(p1, p2) {
+    return Math.sqrt(
+        Math.pow(p2[0] - p1[0], 2) +
+        Math.pow(p2[1] - p1[1], 2)
+    );
+}
+
+// Get the angle to rotate counter clockwise for the point to be vertical upwards
+function calculateAngleToVertical(origin, point) {
+    const x = point[0] - origin[0];
+    const y = point[1] - origin[1];
+    if (y === 0) {
+        return (x > 0 ? 1 : -1) * Math.PI / 2; 
+    }
+    return Math.atan(x / y) + (y < 0 ? 0 : Math.PI);
+}
+
+function normalizePredictions(prediction) {
+    // Create function to center landmarks to the palm base
+    const { palmBase, middleFinger } = prediction.annotations;
+    function centerLandmark(landmark) {
+        return [
+            landmark[0] - palmBase[0][0],
+            landmark[1] - palmBase[0][1],
+            landmark[2],
+        ]
+    }
+
+    // Create function to rotate landmarks to be vertical
+    const angle = calculateAngleToVertical(palmBase[0], middleFinger[0]);
+    const sinTheta = Math.sin(angle);
+    const cosTheta = Math.cos(angle);
+    function applyRotation(landmark) {
+        return [
+            landmark[0] * cosTheta - landmark[1] * sinTheta,
+            landmark[0] * sinTheta + landmark[1] * cosTheta,
+            landmark[2],
+        ]
+    }
+    
+    // Scales landmark to uniform size
+    const unitLength = getDist(palmBase[0], middleFinger[0]);
+    function scaleDown(landmark) {
+        return [
+            landmark[0] / unitLength,
+            landmark[1] / unitLength,
+            landmark[2],
+        ]
+    }
+
+    // Uncenter landmark (used for rendering the points)
+    function uncenterLandmark(landmark) {
+        return [
+            landmark[0] + palmBase[0][0],
+            landmark[1] + palmBase[0][1],
+            landmark[2],
+        ]
+    }
+
+    // Apply centering and rotating functions to landmarks
+    const { landmarks } = prediction;
+    return landmarks.map(centerLandmark).map(applyRotation).map(scaleDown);
+}
+
 // This will probably return a promise
 function checkFinger(img, prediction, numFingers) {
+    const landmarks = normalizePredictions(prediction);
+    console.log('Landmarks for model:')
+    console.log(landmarks);
+    // Pass these landmarks to the model
     return true;
 }
 
@@ -81,9 +150,9 @@ function runDetectionImage(img) {
                 //     const [x, y, z] = keypoints[i];
                 //     console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
                 // }
-                console.log(`Confidence scores: ${prediction.handInViewConfidence}`)
-                console.log(`Bounding Box:`)
-                console.table(prediction.boundingBox)
+                // console.log(`Confidence scores: ${prediction.handInViewConfidence}`)
+                // console.log(`Bounding Box:`)
+                // console.table(prediction.boundingBox)
 
                 // Draw diagonal of bounding box
                 // let { topLeft, bottomRight } = prediction.boundingBox
@@ -214,11 +283,6 @@ let capturePic = () => {
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
         cameraOutput.src = cameraSensor.toDataURL('image/webp')
-        if (model) {
-            // Not sure why, but doesn't work on cameraOutput
-            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
-            checkImage(cameraSensor, sequence[sequence.length - 1]);
-        }
         
         if (curTime % timePerSeq == 0) {
             const quadrant = Math.floor(Math.random() * 4)
@@ -238,6 +302,12 @@ let capturePic = () => {
                 startPoint = [handOverlay.width / 2 * (quadrant % 2), handOverlay.height / 2 * Math.floor(quadrant / 2)]
                 ctx.drawImage(img, startPoint[0], startPoint[1], handOverlay.width / 2, handOverlay.height / 2)
             }
+        }
+
+        if (model) {
+            // Not sure why, but doesn't work on cameraOutput
+            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
+            checkImage(cameraSensor, sequence[sequence.length - 1]);
         }
         curTime++
     }
