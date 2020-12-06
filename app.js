@@ -153,7 +153,7 @@ function capturePic() {
             pauseTime--
             totalPauseTime++
             console.log(`pause remaining: ${pauseTime}`)
-        } else if ((curTime - totalPauseTime) % timePerSeq == 0) {
+        } else if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
             clearHandOutline()
             displayText = (curTime - totalPauseTime) % timePerSeq
             if (model) {
