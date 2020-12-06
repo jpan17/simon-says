@@ -5,6 +5,7 @@
 * Kaggle gesture dataset (https://www.kaggle.com/koryakinp/fingers)
 * Handpose model (https://www.npmjs.com/package/@tensorflow-models/handpose)
 * Bootstrap template (https://github.com/StartBootstrap/startbootstrap-creative)
+* Fingers test dataset (team-created) (https://drive.google.com/drive/folders/1zQRdwLCZBg0w7tgMW19OUPa7Shgq2DbZ)
 
 ## Usage ##
 Navigate to this link and enable your webcam to play this game: https://jpan17.github.io/simon-says/
