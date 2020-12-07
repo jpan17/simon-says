@@ -31,13 +31,13 @@ def train(model, input, label, params, numIters):
     ''' 
     # Initialize training parameters
     # Learning rate
-    lr = params.get("learning_rate", .01)
+    lr = params.get("learning_rate", .001)
     
     # Weight decay
     wd = params.get("weight_decay", .0005)
     
     # Batch size
-    batch_size = params.get("batch_size", 50)
+    batch_size = params.get("batch_size", 400)
     # There is a good chance you will want to save your network model during/after
     # training. It is up to you where you save and how often you choose to back up
     # your model. By default the code saves the model in 'model.npz'.
