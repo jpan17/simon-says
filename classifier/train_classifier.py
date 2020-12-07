@@ -12,16 +12,20 @@ def main():
     train_data, train_label, test_data, test_label = load_train_test_data()
         
     layers = [
-              init_layers('flatten', {}),
-              init_layers('linear', {'num_in': 3 * 21,
-                                     'num_out': 6}),            
-              init_layers('softmax', {})]
+                init_layers('conv', {'filter_size': 3,
+                                     'filter_depth': 1,
+                                     'num_filters': 6}),
+                init_layers('relu', {}),
+                init_layers('flatten', {}),
+                init_layers('linear', {'num_in': 19 * 6,
+                                       'num_out': 6}),            
+                init_layers('softmax', {})]
         
     model = init_model(layers, [3, 21, 1], 6, True)
     params = {"test_data": test_data,
               "test_labels": test_label}
         
-    train_model, train_loss = train(model, train_data, train_label, params, 2500)
+    train_model, train_loss = train(model, train_data, train_label, params, 5000)
 
 if __name__ == '__main__':
     print('Training!')
