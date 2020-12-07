@@ -86,8 +86,7 @@ function getNextSeq() {
   sequence.push({
       quadrant,
       numFingers,
-  });
-  seqDisplay.innerHTML = `Next: ${quadrant}${numFingers}`;
+  })
   return { numFingers, quadrant }
 }
 
@@ -241,6 +240,7 @@ function resetGameVars() {
   inGame = false
   pauseTime = 0
   totalPauseTime = 0
+  scoreDisplay.innerHTML = 'Score: 0'
 }
 
 // End the game and display final stats

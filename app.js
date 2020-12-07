@@ -1,10 +1,17 @@
-// const { traceDeprecation } = require("process");
+// HTML elements
+const cameraView = document.querySelector('#camera-view'),
+    cameraOutput = document.querySelector('#camera-output'),
+    cameraSensor = document.querySelector('#camera-sensor'),
+    startButton = document.querySelector('#start-button'),
+    stopButton = document.querySelector('#stop-button'),
+    testCanvas = document.querySelector('#test-canvas'),
+    overlay = document.querySelector('#overlay'),
+    handOverlay = document.querySelector('#hand-overlay'),
+    scoreDisplay = document.querySelector('#score-display'), 
+    middleText = document.querySelector('#middle-text'),
+    middleDisplay = document.querySelector('#middle-display'),
+    infoDisplay = document.querySelector('#info-display')
 
-// Set constraints for the video stream
-var constraints = { video: { facingMode: 'user' }, audio: false }
-
-var model = null;
-    
 // Game variables
 let timePerSeq = 2,
     inGame,
@@ -15,6 +22,20 @@ let timePerSeq = 2,
     totalPauseTime
 resetGameVars()
 
+// Misc options
+const options = {
+    maxSizeFactor: 0.5,     
+    heightScaleFactor: 0.25,
+    widthScaleFactor: 0.25,
+    newHandPauseTime: 2,
+    debuggingCanvas: false
+}
+
+// Set constraints for the video stream
+var constraints = { video: { facingMode: 'user' }, audio: false }
+
+var model = null;
+
 // Model parameters 
 const modelParams = {
     flipHorizontal: true,   // flip e.g for video  
@@ -23,33 +44,11 @@ const modelParams = {
     scoreThreshold: 0.6,    // confidence threshold for predictions.
 }
 
-// Misc options
-const options = {
-    maxSizeFactor: 0.5,     
-    heightScaleFactor: 0.25,
-    widthScaleFactor: 0.25,
-    newHandPauseTime: 2
-}
-
-// HTML elements
-const cameraView = document.querySelector('#camera-view'),
-    cameraOutput = document.querySelector('#camera-output'),
-    cameraSensor = document.querySelector('#camera-sensor'),
-    startButton = document.querySelector('#start-button'),
-    stopButton = document.querySelector('#stop-button'),
-    testCanvas = document.querySelector('#test-canvas'),
-    overlay = document.querySelector('#overlay'),
-    handOverlay = document.querySelector('#hand-overlay'),
-    seqDisplay = document.querySelector('#seq-display'), 
-    middleText = document.querySelector('#middle-text'),
-    middleDisplay = document.querySelector('#middle-display'),
-    infoDisplay = document.querySelector('#info-display')
-
 // Start and stop game
 startButton.onclick = () => {
     resetGameVars()
     inGame = true
-    cameraOutput.classList.add('camera-output-started')
+    if (options.debuggingCanvas) cameraOutput.classList.add('camera-output-started')
     middleDisplay.classList.remove('hide')
     infoDisplay.classList.add('hide')
 }
@@ -140,10 +139,11 @@ function capturePic() {
         cameraSensor.width = cameraView.videoWidth
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
-        cameraOutput.src = cameraSensor.toDataURL('image/webp')
+        if (options.debuggingCanvas) cameraOutput.src = cameraSensor.toDataURL('image/webp')
 
         // Generate new hand
         if (curSeq == sequence.length) {
+            scoreDisplay.innerHTML = `Score: ${sequence.length}`
             let { numFingers, quadrant } = getNextSeq()
             displayHandOutline(numFingers, quadrant)
             pauseTime = options.newHandPauseTime
@@ -161,7 +161,7 @@ function capturePic() {
             clearHandOutline()
             displayText = (curTime - totalPauseTime) % timePerSeq
             if (model) {
-                runDetectionImage(cameraSensor, sequence[curSeq])
+                // runDetectionImage(cameraSensor, sequence[curSeq])
                 checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
                     if (!validImage) {
                         // displayText = '❌'

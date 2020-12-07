@@ -29,7 +29,7 @@ html, body {
     right: 20px;
 }
 
-button, #seq-display {
+button, #score-display {
     width: 200px;
     background-color: black;
     color: white;
@@ -50,7 +50,7 @@ button, #seq-display {
     bottom: 50px;
     left: calc(50% + 50px);
 }
-#seq-display {
+#score-display {
     top: 50px;
     left: calc(50% - 100px);
 }
