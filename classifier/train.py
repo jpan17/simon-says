@@ -59,7 +59,7 @@ def train(model, input, label, params, numIters):
     momentum = 0.5
     
     step_size_training = 50
-    step_size_testing = 200
+    step_size_testing = 250
     training_loss = []
     testing_loss = []
     
