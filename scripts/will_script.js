@@ -24,7 +24,6 @@ const modelParams = settings.customModelParams ? {
   scoreThreshold: 0
 } : {}
 let keypointsOutput = ''
-let dataset_type = 'test'
 
 stopButton.onclick = () => {
   settings.multiple = false
@@ -114,7 +113,8 @@ handpose.load(modelParams).then(model => {
       
       // Store keypoints to be outputted in file
       if (settings.keypointsToFile && predictions.length > 0) {  
-        let landmarks = normalizePredictions(predictions[0])        
+        let landmarks = normalizePredictions(predictions[0])   
+        // let landmarks = predictions[0].landmarks
         keypointsOutput += `${finger}_${landmarks}\n`
       }
       
