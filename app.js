@@ -94,7 +94,6 @@ function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
   console.log('Landmarks for model:')
   console.log(landmarks);
-  let correct = false
   // Pass these landmarks to the classifier
   return fetch('http://127.0.0.1:8000', {
     method: 'POST', 
@@ -104,7 +103,7 @@ function checkFinger(img, prediction, numFingers) {
   ).then(
       body => {
           console.log(body)
-          correct = (parseInt(body) === numFingers)
+          const correct = (parseInt(body) === numFingers)
           if (correct) {
               console.log("You're correct!")
           } else {
@@ -120,7 +119,7 @@ function checkQuadrantAndFinger(img, prediction, target) {
         return false
     }
     const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-    return checkFinger(img, prediction, target.numFingers).then(
+    return quadrantCorrect && checkFinger(img, prediction, target.numFingers).then(
         correct => {
             return correct && quadrantCorrect
         }
