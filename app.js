@@ -105,24 +105,35 @@ function checkFinger(img, prediction, numFingers) {
       body => {
           console.log(body)
           correct = (parseInt(body) === numFingers)
-          console.log('You were ' + correct)
+          if (correct) {
+              console.log("You're correct!")
+          } else {
+              console.log("Incorrect. Expected: " + numFingers + "; Actual: " + body)
+          }
           return correct
       }
   )
 }
 
 function checkQuadrantAndFinger(img, prediction, target) {
-  const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-  return quadrantCorrect && checkFinger(img, prediction, target.numFingers);    
+    if (!prediction) {
+        return false
+    }
+    const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
+    return checkFinger(img, prediction, target.numFingers).then(
+        correct => {
+            return correct && quadrantCorrect
+        }
+    );    
 }
 
 // Verify whether hand is correct
 function checkImage(img, target) {
   return model.estimateHands(img, modelParams.flipHorizontal).then(predictions => 
-      predictions.map(p => checkQuadrantAndFinger(img, p, target))
+      checkQuadrantAndFinger(img, predictions[0], target)
   ).then(checks => {
-      console.log(`Correct: ${checks[0]}`);
-      return checks[0];
+      console.log(`Correct: ${checks}`);
+      return checks;
   })
 }
 

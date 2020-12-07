@@ -11,8 +11,10 @@ def main():
     model = np.load('model.npz', allow_pickle=True)
     model = dict(model)
     output, _ = inference(model, new_sample)
+    
     print(np.argmax(output))
     sys.stdout.flush()
+    model.close()
     
 if __name__ == '__main__':
     main()
