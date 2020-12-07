@@ -6,11 +6,11 @@ from sklearn.model_selection import train_test_split
 def load_data():
     
     # read from .txt files
-    train_file = open('keypoints_kaggle_train.txt', 'r')
+    train_file = open('./keypoints/keypoints_kaggle_train.txt', 'r')
     train_lines = train_file.readlines()
     train_lines = train_lines[1:]
     
-    test_file = open('keypoints_kaggle_test.txt', 'r')
+    test_file = open('./keypoints/keypoints_kaggle_test.txt', 'r')
     test_lines = test_file.readlines()
     test_lines = test_lines[1:]
     

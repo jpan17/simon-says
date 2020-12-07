@@ -11,10 +11,10 @@ import time
 def main():
     train_data, train_label, test_data, test_label = load_train_test_data()
         
-    layers = [         
+    layers = [
               init_layers('flatten', {}),
               init_layers('linear', {'num_in': 3 * 21,
-                                     'num_out': 6}),
+                                     'num_out': 6}),            
               init_layers('softmax', {})]
         
     model = init_model(layers, [3, 21, 1], 6, True)
