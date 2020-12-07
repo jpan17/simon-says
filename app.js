@@ -13,14 +13,16 @@ const cameraView = document.querySelector('#camera-view'),
     infoDisplay = document.querySelector('#info-display')
 
 // Game variables
-let timePerSeq = 2,
+let timePerSeq = 3,
+    newHandPauseTime = 3,
     inGame,
     sequence, 
     curTime, 
     curSeq, 
     pauseTime, 
     totalPauseTime,
-    validDetection
+    validDetection,
+    correctGestures
 resetGameVars()
 
 // Misc options
@@ -28,7 +30,6 @@ const options = {
     maxSizeFactor: 0.5,     
     heightScaleFactor: 0.25,
     widthScaleFactor: 0.25,
-    newHandPauseTime: 2,
     debuggingCanvas: false
 }
 
@@ -97,6 +98,27 @@ function checkQuadrant(img, boundingBox, quadrant) {
   }
 }
 
+// FOR DEBUGGING PURPOSES
+function getQuadrant(img, boundingBox) {
+    // Find center of bounding box
+    const { topLeft: tl, bottomRight: br } = boundingBox;
+    const bboxCenter = [(tl[0] + br[0]) / 2, (tl[1] + br[1]) / 2];
+    
+    // Find center of image
+    const { width, height } = img;
+    const imgCenter = [width / 2, height / 2];
+
+    if (bboxCenter[0] <= imgCenter[0] && bboxCenter[1] <= imgCenter[1])
+        return 0
+    if (bboxCenter[0] >= imgCenter[0] && bboxCenter[1] <= imgCenter[1])
+        return 1
+    if (bboxCenter[0] <= imgCenter[0] && bboxCenter[1] >= imgCenter[1])
+        return 2
+    if (bboxCenter[0] >= imgCenter[0] && bboxCenter[1] >= imgCenter[1])
+        return 3
+    return -1
+}
+
 // This will probably return a promise
 function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
@@ -107,8 +129,9 @@ function checkFinger(img, prediction, numFingers) {
 }
 
 function checkQuadrantAndFinger(img, prediction, target) {
-  const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-  return quadrantCorrect && checkFinger(img, prediction, target.numFingers);    
+    console.log(`quadrant: ${getQuadrant(cameraSensor, prediction.boundingBox)}`)
+    const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
+    return quadrantCorrect && checkFinger(img, prediction, target.numFingers);    
 }
 
 // Verify whether hand is correct
@@ -145,13 +168,13 @@ function capturePic() {
 
         // Generate new hand
         if (curSeq == sequence.length) {
-            scoreDisplay.innerHTML = `Score: ${sequence.length}`
             let { numFingers, quadrant } = getNextSeq()
             displayHandOutline(numFingers, quadrant)
-            pauseTime = options.newHandPauseTime
+            pauseTime = newHandPauseTime
             displayText = pauseTime
             curSeq = 0
             validDetection = false
+            scoreDisplay.innerHTML = `Current: ${curSeq}/${sequence.length}`
         }
         
         // Check for next hand in sequence
@@ -175,11 +198,14 @@ function capturePic() {
                     endGame()
                 } else {
                     console.log(`CORRECT!!!! ${curSeq}`)
+                    correctGestures++
                     displayText = '✔'
                     middleText.innerHTML = displayText
-                    curSeq++
                     validDetection = false
+                    scoreDisplay.innerHTML = `Current: ${curSeq+1}/${sequence.length}`
                 }
+                displayHandOutline(sequence[curSeq].numFingers, sequence[curSeq].quadrant)
+                curSeq++
             } else {
                 displayText = '...'
                 console.log('detecting...')
@@ -192,4 +218,4 @@ function capturePic() {
 }
 
 // Read and analyze image every time step
-setInterval(capturePic, 1000 * timePerSeq)
+setInterval(capturePic, 1000)
