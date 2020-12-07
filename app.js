@@ -19,7 +19,8 @@ let timePerSeq = 2,
     curTime, 
     curSeq, 
     pauseTime, 
-    totalPauseTime
+    totalPauseTime,
+    validDetection
 resetGameVars()
 
 // Misc options
@@ -116,7 +117,8 @@ function checkImage(img, target) {
       predictions.map(p => checkQuadrantAndFinger(img, p, target))
   ).then(checks => {
     //   console.log(`Correct hand #${curSeq}: ${checks[0]}`);
-      return false || checks[0] ;
+    if (checks.length == 0) console.log('No hand detected')  
+    return false || checks[0]
   })
 }
 
@@ -149,6 +151,7 @@ function capturePic() {
             pauseTime = options.newHandPauseTime
             displayText = pauseTime
             curSeq = 0
+            validDetection = false
         }
         
         // Check for next hand in sequence
@@ -157,29 +160,30 @@ function capturePic() {
             pauseTime--
             totalPauseTime++
             console.log(`pause remaining: ${pauseTime}`)
-        } else if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
+        } else {
             clearHandOutline()
-            displayText = (curTime - totalPauseTime) % timePerSeq
             if (model) {
                 // runDetectionImage(cameraSensor, sequence[curSeq])
                 checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
-                    if (!validImage) {
-                        // displayText = '❌'
-                        displayText = '...'
-                        middleText.innerHTML = displayText
-                        endGame()
-                    } else {
-                        console.log(`CORRECT!!!! ${curSeq}`)
-                        displayText = '✔'
-                        middleText.innerHTML = displayText
-                    }
+                    validDetection = validImage || validDetection
                 })
             }
-            curSeq++
-        } else {
-            clearHandOutline()
-            displayText = '...'
-            console.log('detecting...')
+            if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
+                if (!validDetection) {
+                    displayText = '...'
+                    middleText.innerHTML = displayText
+                    endGame()
+                } else {
+                    console.log(`CORRECT!!!! ${curSeq}`)
+                    displayText = '✔'
+                    middleText.innerHTML = displayText
+                    curSeq++
+                    validDetection = false
+                }
+            } else {
+                displayText = '...'
+                console.log('detecting...')
+            }
         }
         
         middleText.innerHTML = displayText

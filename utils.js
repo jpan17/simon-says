@@ -241,6 +241,7 @@ function resetGameVars() {
   pauseTime = 0
   totalPauseTime = 0
   scoreDisplay.innerHTML = 'Score: 0'
+  validDetection = false
 }
 
 // End the game and display final stats
