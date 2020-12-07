@@ -11,9 +11,24 @@ import time
 def main():
     train_data, train_label, test_data, test_label = load_data()
         
-    layers = [         
+    layers = [init_layers('conv', {'filter_size': 3,
+                                   'filter_depth': 1,
+                                   'num_filters': 5}),
+              init_layers('relu', {}),
               init_layers('flatten', {}),
-              init_layers('linear', {'num_in': 3 * 21,
+            #   init_layers('linear', {'num_in': 63,
+            #                          'num_out': 40}), 
+            #   init_layers('relu', {}),                
+            #   init_layers('linear', {'num_in': 40,
+            #                          'num_out': 30}), 
+            #   init_layers('relu', {}),  
+            #   init_layers('linear', {'num_in': 30,
+            #                          'num_out': 20}), 
+            #   init_layers('relu', {}),  
+            #   init_layers('linear', {'num_in': 20,
+            #                          'num_out': 10}),  
+            #   init_layers('relu', {}), 
+              init_layers('linear', {'num_in': 5 * 19,
                                      'num_out': 6}),            
               init_layers('softmax', {})]
         
