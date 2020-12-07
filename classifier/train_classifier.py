@@ -11,8 +11,8 @@ import time
 def main():
     train_data, train_label, test_data, test_label = load_train_test_data()
         
-    layers = [init_layers('nxm_conv', {'filter_height': 3,
-                                       'filter_width': 1,
+    layers = [init_layers('nxm_conv', {'filter_height': 1,
+                                       'filter_width': 3,
                                        'filter_depth': 1,
                                        'num_filters': 5}),
               init_layers('relu', {}),
@@ -21,7 +21,7 @@ def main():
                                      'num_out': 6}),            
               init_layers('softmax', {})]
         
-    model = init_model(layers, [3, 21, 1], 6, True)
+    model = init_model(layers, [21, 3, 1], 6, True)
     params = {"test_data": test_data,
               "test_labels": test_label}
         
