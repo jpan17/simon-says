@@ -18,6 +18,7 @@ const settings = {
   download: false,
   keypointsToFile: true,
   customModelParams: false,
+  crop: false,
 }
 const datasetSettings = {
   kinect: {
@@ -60,12 +61,14 @@ handpose.load(modelParams).then(model => {
       
       // Crop image to saveCanvas
       if (predictions.length > 0) {
-        bb = predictions[0].boundingBox
-        tl = bb.topLeft, br = bb.bottomRight
-        newWidth = br[0] - tl[0], newHeight = br[1] - tl[1]
-        saveCanvas.width = newWidth
-        saveCanvas.height = newHeight
-        saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
+        if (settings.crop) {
+          bb = predictions[0].boundingBox
+          tl = bb.topLeft, br = bb.bottomRight
+          newWidth = br[0] - tl[0], newHeight = br[1] - tl[1]
+          saveCanvas.width = newWidth
+          saveCanvas.height = newHeight
+          saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
+        }
 
         // Download cropped image
         if (settings.download) {
