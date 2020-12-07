@@ -94,22 +94,41 @@ function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
   console.log('Landmarks for model:')
   console.log(landmarks);
-  // Pass these landmarks to the model
-  return true;
+  // Pass these landmarks to the classifier
+  return fetch('http://127.0.0.1:8000', {
+    method: 'POST', 
+    body: JSON.stringify(landmarks)
+  }).then(
+      response => response.text()
+  ).then(
+      body => {
+          console.log(body)
+          const correct = (parseInt(body) === numFingers)
+          if (correct) {
+              console.log("You're correct!")
+          } else {
+              console.log("Incorrect. Expected: " + numFingers + "; Actual: " + body)
+          }
+          return correct
+      }
+  )
 }
 
 function checkQuadrantAndFinger(img, prediction, target) {
-  const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-  return quadrantCorrect && checkFinger(img, prediction, target.numFingers);    
+    if (!prediction) {
+        return false
+    }
+    const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
+    return quadrantCorrect && checkFinger(img, prediction, target.numFingers);  
 }
 
 // Verify whether hand is correct
 function checkImage(img, target) {
   return model.estimateHands(img, modelParams.flipHorizontal).then(predictions => 
-      predictions.map(p => checkQuadrantAndFinger(img, p, target))
+      checkQuadrantAndFinger(img, predictions[0], target)
   ).then(checks => {
-      console.log(`Correct: ${checks[0]}`);
-      return checks[0];
+      console.log(`Correct: ${checks}`);
+      return checks;
   })
 }
 
