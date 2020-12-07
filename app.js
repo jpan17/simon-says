@@ -94,8 +94,21 @@ function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
   console.log('Landmarks for model:')
   console.log(landmarks);
-  // Pass these landmarks to the model
-  return true;
+  let correct = false
+  // Pass these landmarks to the classifier
+  return fetch('http://127.0.0.1:8000', {
+    method: 'POST', 
+    body: JSON.stringify(landmarks)
+  }).then(
+      response => response.text()
+  ).then(
+      body => {
+          console.log(body)
+          correct = (parseInt(body) === numFingers)
+          console.log('You were ' + correct)
+          return correct
+      }
+  )
 }
 
 function checkQuadrantAndFinger(img, prediction, target) {
