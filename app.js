@@ -119,11 +119,7 @@ function checkQuadrantAndFinger(img, prediction, target) {
         return false
     }
     const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-    return quadrantCorrect && checkFinger(img, prediction, target.numFingers).then(
-        correct => {
-            return correct && quadrantCorrect
-        }
-    );    
+    return quadrantCorrect && checkFinger(img, prediction, target.numFingers);  
 }
 
 // Verify whether hand is correct
