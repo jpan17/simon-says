@@ -26,7 +26,7 @@ def normalize(keypoints):
 def load_data():
     
     # read from keypoints.txt
-    data_file = open('keypoints_original.txt', 'r')
+    data_file = open('keypoints.txt', 'r')
     lines = data_file.readlines()
     lines = lines[1:]
     
@@ -54,12 +54,12 @@ def load_data():
         keypoints = [coordinates[i * k:(i + 1) * k] for i in range((len(coordinates) + k - 1) // k)]
 
         keypoints = np.asfarray(keypoints)
-        # keypoints = normalize(keypoints)
+        keypoints = normalize(keypoints)
         keypoints = np.reshape(keypoints, (1, 3, 21))
         samples.append(keypoints)
     
     samples = np.asfarray(samples)
-    labels = np.array(labels)
+    labels = np.asfarray(labels)
     print("Data shape:", samples.shape)
     print("Labels shape:", labels.shape)   
     
