@@ -1,5 +1,3 @@
-
-
 // Get distance from this point to the origin
 function getDist(p1, p2) {
   return Math.sqrt(
@@ -242,4 +240,105 @@ function endGame() {
   middleDisplay.classList.add('hide')
   infoDisplay.children[0].innerHTML = `Number of correct gestures: ${correctGestures}`
   infoDisplay.children[1].innerHTML = `Longest sequence: ${Math.max(longestSeq, 0)}`
+}
+
+// 0 - Top left
+// 1 - Top right
+// 2 - Bottom left
+// 3 - Bottom right
+function checkQuadrant(img, boundingBox, quadrant) {
+  // Find center of bounding box
+  const { topLeft: tl, bottomRight: br } = boundingBox;
+  const bboxCenter = [(tl[0] + br[0]) / 2, (tl[1] + br[1]) / 2];
+  
+  // Find center of image
+  const { width, height } = img;
+  const imgCenter = [width / 2, height / 2];
+
+  // Check correctness
+  switch(quadrant) {
+      case 0:
+          return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
+      case 1:
+          return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] <= imgCenter[1];
+      case 2:
+          return bboxCenter[0] <= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
+      case 3:
+          return bboxCenter[0] >= imgCenter[0] && bboxCenter[1] >= imgCenter[1];
+      default:
+          return false;
+  }
+}
+
+function checkFinger(prediction, numFingers) {
+  const landmarks = normalizePredictions(prediction);
+  console.log('Landmarks for model:')
+  console.log(landmarks);
+  // Pass these landmarks to the classifier
+  return fetch('http://127.0.0.1:8000', {
+    method: 'POST', 
+    body: JSON.stringify(landmarks)
+  }).then(
+      response => response.text()
+  ).then(
+      body => {
+          console.log(body)
+          const correct = (parseInt(body) === numFingers)
+          if (correct) {
+              console.log("You're correct!")
+          } else {
+              console.log("Incorrect. Expected: " + numFingers + "; Actual: " + body)
+          }
+          return correct
+      }
+  )
+}
+
+function distFromOrigin(pt) {
+  return Math.sqrt(
+    Math.pow(pt[0], 2) +
+    Math.pow(pt[1], 2)
+  );
+}
+
+function checkFingerLocal(prediction, numFingers) {
+  const landmarks = normalizePredictions(prediction);
+  // console.log('Landmarks!');
+  // console.log(landmarks);
+  const fingerIndex = {
+    thumb: { base: 1, tip: 4, },
+    index: { base: 5, tip: 8, },
+    middle: { base: 9, tip: 12, },
+    ring: { base: 13, tip: 16, },
+    pinky: { base: 17, tip: 20, },
+  }
+  const nonThumbs = ['index', 'middle', 'ring', 'pinky'].map(finger => {
+    const { base, tip } = fingerIndex[finger];
+    const diff = distFromOrigin(landmarks[tip]) - distFromOrigin(landmarks[base]);
+    return diff > 0 ? 1 : 0;
+  }).reduce((acc, val) => acc + val);
+  if (nonThumbs < 4) {
+    // console.log(`nonThumbs: ${nonThumbs}`);
+    return nonThumbs === numFingers;
+  }
+
+  // We only care if thumb is up if all other fingers are up
+  // Thumb is up if the tip of the thumb is on the same side of the palm base
+  // as the base of the index and is further away from the palm base
+  const indexBaseX = landmarks[fingerIndex.index.base][0];
+  const thumbTipX = landmarks[fingerIndex.thumb.tip][0];
+  const thumbUp = indexBaseX < 0 ? thumbTipX < indexBaseX : thumbTipX > indexBaseX;
+  const fingersUp = nonThumbs + (thumbUp ? 1 : 0);
+  // console.log(`fingersUp: ${fingersUp}`);
+  return fingersUp === numFingers;
+}
+
+function checkQuadrantAndFinger(img, prediction, target) {
+    if (!prediction) {
+      console.log('no hand detected');
+      return false
+    }
+    const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
+    return quadrantCorrect && checkFingerLocal(prediction, target.numFingers);  
+    // return quadrantCorrect && checkFinger(prediction, target.numFingers);  
 }
