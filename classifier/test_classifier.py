@@ -79,7 +79,7 @@ def main():
     labels = np.asfarray(labels)
     print(samples.shape)
     
-    model = np.load('9405c_model.npz', allow_pickle=True)
+    model = np.load('9409c_model.npz', allow_pickle=True)
     model = dict(model)
     willOutput, _ = inference(model, test_data)
     output, _ = inference(model, samples)
@@ -116,6 +116,8 @@ def main():
                                                 fingerKSPredictions[finger][1] / 
                                                 fingerKSPredictions[finger][0]))
 
+    print(correctKSPredictions)
+    print(len(labels))
     print('Model accuracy on KS hands:', correctKSPredictions / len(labels))  
     
 if __name__ == '__main__':
