@@ -66,26 +66,26 @@ def main():
         keypoints = [coordinates[i * num_coords:(i + 1) * num_coords] for i in range((len(coordinates) + num_coords - 1) // num_coords)]
 
         keypoints = np.asfarray(keypoints)
-        # keypoints = normalize(keypoints)
-        keypoints = np.reshape(keypoints, (1, 3, 21))
+        keypoints = np.reshape(keypoints.T, (1, 3, 21))
         samples.append(keypoints)
     
     test_data = np.asfarray(test_data)
     test_data = test_data.T
     test_labels = np.asfarray(test_labels)
+    print(test_data.shape)
     
     samples = np.asfarray(samples)
     samples = samples.T
     labels = np.asfarray(labels)
+    print(samples.shape)
     
-    model = np.load('9465c_model.npz', allow_pickle=True)
+    model = np.load('9405c_model.npz', allow_pickle=True)
     model = dict(model)
     willOutput, _ = inference(model, test_data)
     output, _ = inference(model, samples)
     
-    
+    # final accuracy for overall will dataset and individual fingers
     correctWillPredictions = 0
-    # stores tuples of total # of actual fingers in the test set to the correctly predicted ones
     willFingerPredictions = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
     for i in range(len(test_labels)):
         champIndex = np.argmax(willOutput[:, i])
@@ -101,8 +101,8 @@ def main():
     
     print('Model accuracy on Will hands:', correctWillPredictions / len(test_labels))  
     
+    # final accuracy for overall KS dataset and individual fingers
     correctKSPredictions = 0
-    # stores tuples of total # of actual fingers in the test set to the correctly predicted ones
     fingerKSPredictions = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
     for i in range(len(labels)):
         champIndex = np.argmax(output[:, i])
@@ -115,7 +115,7 @@ def main():
         print("Finger {0} accuracy for KS: {1}".format(finger, 
                                                 fingerKSPredictions[finger][1] / 
                                                 fingerKSPredictions[finger][0]))
-    
+
     print('Model accuracy on KS hands:', correctKSPredictions / len(labels))  
     
 if __name__ == '__main__':

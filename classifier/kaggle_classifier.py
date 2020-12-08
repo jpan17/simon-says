@@ -17,7 +17,13 @@ def main():
               init_layers('relu', {}),
               init_layers('flatten', {}),
               init_layers('linear', {'num_in': 105,
-                                     'num_out': 6}),            
+                                     'num_out': 75}),            
+              init_layers('relu', {}),
+              init_layers('linear', {'num_in': 75,
+                                     'num_out': 30}),            
+              init_layers('relu', {}),
+              init_layers('linear', {'num_in': 30,
+                                     'num_out': 6}),   
               init_layers('softmax', {})]        
     # layers =  [
     #           init_layers('flatten', {}),
