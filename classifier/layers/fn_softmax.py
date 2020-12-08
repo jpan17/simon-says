@@ -29,10 +29,9 @@ def fn_softmax(input, params, hyper_params, backprop, dv_output=None):
 
     # TODO: FORWARD CODE
     #       Update output with values
-    col_sums = np.sum(exp_input, axis = 0)
-    for i in range(len(output)):
-        for j in range(len(output[0])):
-            output[i][j] = exp_input[i][j] / col_sums[j]
+
+    denom = exp_input.sum(axis=0, keepdims=True)
+    output = exp_input / denom
 
     if backprop:
         assert dv_output is not None
@@ -40,26 +39,14 @@ def fn_softmax(input, params, hyper_params, backprop, dv_output=None):
 
         # TODO: BACKPROP CODE
         #       Update dv_input with values
-        for i in range(len(input)):
-            for j in range(len(input[0])):
-                
-                x = exp_input[i][j]
-                dydx = []
-                
-                for k in range(len(input)):
-                    y = exp_input[k][j]
-                    
-                    if i == k:
-                        dydx.append((col_sums[j] * x - x * y) / (col_sums[j] ** 2))
-                    else:
-                        dydx.append((-x * y) / (col_sums[j] ** 2))
-                
-                dLdx = 0
-                for m in range(len(dv_output)):
-                    dLdy = dv_output[m][j]
-                    dLdx += dLdy * dydx[m]
-                    
-                dv_input[i][j] = dLdx
-
+        
+        DS = np.zeros((num_nodes, num_nodes))
+        for b in range(batch_size): 
+            S = output[:,b]
+            j = -1 * S.reshape((num_nodes, 1)) @ S.reshape((1, num_nodes))
+            for i in range(num_nodes): 
+                j[i][i] = S[i] * (1 - S[i])
+            dv_input[:,b] = j @ dv_output[:,b]
+        
 
     return output, dv_input, grad

@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path += ['pyc_code']
-from inference_ import inference as inference_
+from inference import inference as inference_
 
 def init_model(layers, input_size, output_size, display):
     """
