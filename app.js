@@ -1,31 +1,3 @@
-// const { traceDeprecation } = require("process");
-
-// Set constraints for the video stream
-var constraints = { video: { facingMode: 'user' }, audio: false }
-
-var model = null;
-    
-// Game variables
-let startGame = false, 
-    sequence = [],
-    curTime = 0,
-    timePerSeq = 1
-
-// Model parameters 
-const modelParams = {
-    flipHorizontal: true,   // flip e.g for video  
-    maxNumBoxes: 3,         // maximum number of boxes to detect
-    iouThreshold: 0.3,      // ioU threshold for non-max suppression
-    scoreThreshold: 0.6,    // confidence threshold for predictions.
-}
-
-// Misc options
-const options = {
-    maxSizeFactor: 0.5,     
-    heightScaleFactor: 0.25,
-    widthScaleFactor: 0.25,
-}
-
 // HTML elements
 const cameraView = document.querySelector('#camera-view'),
     cameraOutput = document.querySelector('#camera-output'),
@@ -35,18 +7,55 @@ const cameraView = document.querySelector('#camera-view'),
     testCanvas = document.querySelector('#test-canvas'),
     overlay = document.querySelector('#overlay'),
     handOverlay = document.querySelector('#hand-overlay'),
-    seqDisplay = document.querySelector('#seq-display')
+    scoreDisplay = document.querySelector('#score-display'), 
+    middleText = document.querySelector('#middle-text'),
+    middleDisplay = document.querySelector('#middle-display'),
+    infoDisplay = document.querySelector('#info-display')
+
+// Game variables
+let timePerSeq = 3,
+    newHandPauseTime = 3,
+    inGame,
+    sequence, 
+    curTime, 
+    curSeq, 
+    pauseTime, 
+    totalPauseTime,
+    validDetection,
+    correctGestures
+resetGameVars()
+
+// Misc options
+const options = {
+    maxSizeFactor: 0.5,     
+    heightScaleFactor: 0.25,
+    widthScaleFactor: 0.25,
+    debuggingCanvas: false
+}
+
+// Set constraints for the video stream
+var constraints = { video: { facingMode: 'user' }, audio: false }
+
+var model = null;
+
+// Model parameters 
+const modelParams = {
+    flipHorizontal: true,   // flip e.g for video  
+    maxNumBoxes: 3,         // maximum number of boxes to detect
+    iouThreshold: 0.3,      // ioU threshold for non-max suppression
+    scoreThreshold: 0.6,    // confidence threshold for predictions.
+}
 
 // Start and stop game
 startButton.onclick = () => {
-    startGame = true
-    cameraOutput.classList.add('camera-output-started')
+    resetGameVars()
+    inGame = true
+    if (options.debuggingCanvas) cameraOutput.classList.add('camera-output-started')
+    middleDisplay.classList.remove('hide')
+    infoDisplay.classList.add('hide')
 }
 stopButton.onclick = () => {
-    startGame = false
-    console.log(`final score: ${sequence.length}, final time: ${curTime}`)
-    console.log('sequence: ')
-    console.table(sequence)
+    endGame()
 }
 
 drawQuadrantLines(overlay)
@@ -89,6 +98,27 @@ function checkQuadrant(img, boundingBox, quadrant) {
   }
 }
 
+// FOR DEBUGGING PURPOSES
+function getQuadrant(img, boundingBox) {
+    // Find center of bounding box
+    const { topLeft: tl, bottomRight: br } = boundingBox;
+    const bboxCenter = [(tl[0] + br[0]) / 2, (tl[1] + br[1]) / 2];
+    
+    // Find center of image
+    const { width, height } = img;
+    const imgCenter = [width / 2, height / 2];
+
+    if (bboxCenter[0] <= imgCenter[0] && bboxCenter[1] <= imgCenter[1])
+        return 0
+    if (bboxCenter[0] >= imgCenter[0] && bboxCenter[1] <= imgCenter[1])
+        return 1
+    if (bboxCenter[0] <= imgCenter[0] && bboxCenter[1] >= imgCenter[1])
+        return 2
+    if (bboxCenter[0] >= imgCenter[0] && bboxCenter[1] >= imgCenter[1])
+        return 3
+    return -1
+}
+
 // This will probably return a promise
 function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
@@ -118,6 +148,7 @@ function checkQuadrantAndFinger(img, prediction, target) {
     if (!prediction) {
         return false
     }
+    console.log(`quadrant: ${getQuadrant(cameraSensor, prediction.boundingBox)}`)
     const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
     return quadrantCorrect && checkFinger(img, prediction, target.numFingers);  
 }
@@ -132,11 +163,12 @@ function checkImage(img, target) {
   })
 }
 
+// ONLY FOR DEBUGGING PURPOSES
 // Detect hands with model
 function runDetectionImage(img) {
     model.estimateHands(img, modelParams.flipHorizontal).then(predictions => {
-        console.log(`Found ${predictions.length} hands`)
-        console.log(predictions)
+        // console.log(`Found ${predictions.length} hands`)
+        // console.log(predictions)
         let ctx = testCanvas.getContext('2d')
         if (predictions.length > 0) {
             renderPredictions(predictions, testCanvas, ctx, img)
@@ -146,24 +178,62 @@ function runDetectionImage(img) {
 
 // Take snapshot
 function capturePic() {
-    if (startGame) {
+    if (inGame) {
         cameraSensor.width = cameraView.videoWidth
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
-        cameraOutput.src = cameraSensor.toDataURL('image/webp')
-        
-        if (curTime % timePerSeq == 0) {
-            let { numFingers, quadrant } = getNextSeq()
-            displayHandOutline(numFingers, quadrant)            
-        }
+        if (options.debuggingCanvas) cameraOutput.src = cameraSensor.toDataURL('image/webp')
 
-        if (model) {
-            runDetectionImage(cameraSensor, sequence[sequence.length - 1])
-            checkImage(cameraSensor, sequence[sequence.length - 1]) 
+        // Generate new hand
+        if (curSeq == sequence.length) {
+            let { numFingers, quadrant } = getNextSeq()
+            displayHandOutline(numFingers, quadrant)
+            pauseTime = newHandPauseTime
+            displayText = pauseTime
+            curSeq = 0
+            validDetection = false
+            scoreDisplay.innerHTML = `Current: ${curSeq}/${sequence.length}`
         }
+        
+        // Check for next hand in sequence
+        if (pauseTime > 0) {
+            displayText = pauseTime
+            pauseTime--
+            totalPauseTime++
+            console.log(`pause remaining: ${pauseTime}`)
+        } else {
+            clearHandOutline()
+            if (model) {
+                // runDetectionImage(cameraSensor, sequence[curSeq])
+                checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
+                    validDetection = validImage || validDetection
+                })
+            }
+            if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
+                if (!validDetection) {
+                    displayText = '...'
+                    middleText.innerHTML = displayText
+                    endGame()
+                } else {
+                    console.log(`CORRECT!!!! ${curSeq}`)
+                    correctGestures++
+                    displayText = '✔'
+                    middleText.innerHTML = displayText
+                    validDetection = false
+                    scoreDisplay.innerHTML = `Current: ${curSeq+1}/${sequence.length}`
+                }
+                displayHandOutline(sequence[curSeq].numFingers, sequence[curSeq].quadrant)
+                curSeq++
+            } else {
+                displayText = '...'
+                console.log('detecting...')
+            }
+        }
+        
+        middleText.innerHTML = displayText
         curTime++
     }
 }
 
 // Read and analyze image every time step
-setInterval(capturePic, 1000 * timePerSeq)
+setInterval(capturePic, 1000)

@@ -10,12 +10,17 @@
       <!-- Camera -->
       <main id="camera">
           <canvas id="camera-sensor"></canvas>
-          <canvas id="test-canvas"></canvas> <!-- Using this to make sure the captures are correct -->
+          <!-- <canvas id="test-canvas"></canvas> -->
           <canvas id="overlay"></canvas> 
           <canvas id="hand-overlay"></canvas> 
           <video id="camera-view" autoplay playsinline></video>
-          <img id="camera-output" src="//:0" alt="">
-          <div id="seq-display">Next: </div>
+          <!-- <img id="camera-output" src="//:0" alt=""> -->
+          <div id="score-display">Current: 0/1</div>
+          <div id="middle-display" class="hide"><p id="middle-text" /></div>
+          <div id="info-display">
+              <span>welcome bub</span>
+              <span>instructions: win</span>
+          </div>
           <button id="start-button">Start!</button>
           <button id="stop-button">Stop!</button>
       </main>

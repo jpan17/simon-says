@@ -3,6 +3,7 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
 }
 #camera, #camera-view, #camera-sensor, #camera-output, #overlay, #hand-overlay {
     position: fixed;
@@ -28,7 +29,7 @@ html, body {
     right: 20px;
 }
 
-button, #seq-display {
+button, #score-display {
     width: 200px;
     background-color: black;
     color: white;
@@ -49,9 +50,52 @@ button, #seq-display {
     bottom: 50px;
     left: calc(50% + 50px);
 }
-#seq-display {
+#score-display {
     top: 50px;
     left: calc(50% - 100px);
+}
+#middle-display {
+    width: 200px;
+    height: 200px;
+    background-color: #dddddd77;
+    color: black;
+    font-size: 48px;
+    font-weight: bold;
+    border-radius: 100px;
+    border: none;
+    outline: 0;
+    padding: auto;
+    text-align: center;
+    position: fixed;
+    z-index: 3;
+    top: calc(50% - 100px);
+    left: calc(50% - 100px);
+}
+#middle-text {
+    margin-top: 69px;
+    height: 100%;
+}
+#info-display {
+    display: flex;
+    flex-direction: column;
+    width: 50%; 
+    height: 50%;
+    background-color: #aaaaaacc;
+    color: black;
+    font-size: 36px;
+    border-radius: 25px;
+    outline: 0;
+    z-index: 3;
+    position: fixed;
+    top: 25%;
+    left: 25%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    line-height: 100px;
+}
+.hide {
+    visibility: hidden;
 }
 
 #test-canvas {
@@ -59,7 +103,7 @@ button, #seq-display {
     height: 100%;
     width: 100%;
     object-fit: cover;
-    z-index: 2 !important;
+    z-index: 2;
     border: solid 3px white;
     transform: scaleX(1);
     height: 300px !important;

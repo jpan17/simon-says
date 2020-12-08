@@ -86,9 +86,14 @@ function getNextSeq() {
   sequence.push({
       quadrant,
       numFingers,
-  });
-  seqDisplay.innerHTML = `Next: ${quadrant}${numFingers}`;
+  })
   return { numFingers, quadrant }
+}
+
+// Remove hand outline
+function clearHandOutline() {
+  let ctx = handOverlay.getContext('2d')
+  ctx.clearRect(0, 0, handOverlay.width, handOverlay.height)
 }
 
 // Display hand outline with fingers and in quadrant
@@ -226,4 +231,29 @@ function renderPredictions(predictions, canvas, context, mediasource) {
 
   // Write FPS to top left
   context.font = "bold 14px Candara";
+}
+
+function resetGameVars() {
+  sequence = []
+  curTime = 0
+  curSeq = 0
+  inGame = false
+  pauseTime = 0
+  totalPauseTime = 0
+  scoreDisplay.innerHTML = `Current: 0/1`
+  validDetection = false
+  correctGestures = 0
+}
+
+// End the game and display final stats
+function endGame() {
+  inGame = false
+  const longestSeq = sequence.length - 1
+  console.log(`final score: ${correctGestures}, longest seq: ${longestSeq}`)
+  console.log('sequence: ')
+  console.table(sequence)
+  infoDisplay.classList.remove('hide')
+  middleDisplay.classList.add('hide')
+  infoDisplay.children[0].innerHTML = `Number of correct gestures: ${correctGestures}`
+  infoDisplay.children[1].innerHTML = `Longest sequence: ${Math.max(longestSeq, 0)}`
 }
