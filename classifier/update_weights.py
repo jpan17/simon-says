@@ -33,16 +33,5 @@ def update_weights(model, grads, hyper_params):
             vel_b[i] = rho * vel_b[i] - grads[i]['b']
             current_layer['params']['b'] += a * vel_b[i]
 
-            # current_weights = current_layer['params']['W']
-            # current_bias = current_layer['params']['b']
-            # grad_w = grads[i]['W']
-            # grad_b = grads[i]['b']
-            
-            # updated_model['layers'][i]['params']['W'] = current_weights - grad_w * a
-            
-            # updated_model['layers'][i]['params']['W'] -= current_weights * lmd
-            
-            # updated_model['layers'][i]['params']['b'] = current_bias - grad_b * a
-
 
     return updated_model

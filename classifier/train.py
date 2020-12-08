@@ -97,17 +97,7 @@ def train(model, input, label, params, numIters):
         
         #   (5) Update the weights of the model
         model = update_weights(model, grads, update_params)
-        
-        #   (6*) Update the model weights with momentum 
-        # for j in range(len(model['layers'])):
-        #     layer = model['layers'][j]
-        #     if layer['type'] == 'pool' or layer['type'] == 'softmax' or layer['type'] == 'relu' or layer['type'] == 'flatten':
-        #         continue
-        #     weights = np.array(layer['params']['W'])
 
-        #     if prev_weights[j] is not None:
-        #         layer['params']['W'] += momentum * (weights - prev_weights[j])
-        #     prev_weights[j] = np.array(layer['params']['W'])
     
     elapsed_time = time.time() - begin_time
     

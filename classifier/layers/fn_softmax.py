@@ -50,39 +50,3 @@ def fn_softmax(input, params, hyper_params, backprop, dv_output=None):
         
 
     return output, dv_input, grad
-
-
-    # col_sums = np.sum(exp_input, axis = 0)
-    # for i in range(len(output)):
-    #     for j in range(len(output[0])):
-    #         output[i][j] = exp_input[i][j] / col_sums[j]
-
-    # if backprop:
-    #     assert dv_output is not None
-    #     dv_input = np.zeros([num_nodes, batch_size])
-
-    #     # TODO: BACKPROP CODE
-    #     #       Update dv_input with values
-    #     for i in range(len(input)):
-    #         for j in range(len(input[0])):
-                
-    #             x = exp_input[i][j]
-    #             dydx = []
-                
-    #             for k in range(len(input)):
-    #                 y = exp_input[k][j]
-                    
-    #                 if i == k:
-    #                     dydx.append((col_sums[j] * x - x * y) / (col_sums[j] ** 2))
-    #                 else:
-    #                     dydx.append((-x * y) / (col_sums[j] ** 2))
-                
-    #             dLdx = 0
-    #             for m in range(len(dv_output)):
-    #                 dLdy = dv_output[m][j]
-    #                 dLdx += dLdy * dydx[m]
-                    
-    #             dv_input[i][j] = dLdx
-
-
-    # return output, dv_input, grad
