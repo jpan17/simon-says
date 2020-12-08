@@ -25,7 +25,7 @@ def main():
     params = {"test_data": test_data,
               "test_labels": test_label}
         
-    train_model, train_loss = train(model, train_data, train_label, params, 5000)
+    train_model, train_loss = train(model, train_data, train_label, params, 1000)
 
 if __name__ == '__main__':
     print('Training!')

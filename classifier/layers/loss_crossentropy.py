@@ -18,11 +18,17 @@ def loss_crossentropy(input, labels, hyper_params, backprop):
     loss = 0
 
     # TODO: CALCULATE LOSS
-    for node in range(batch_size):
-        labels_node = int(labels[node])
-        loss -= np.log(input[labels_node][node])
+    batch_size = labels.size
+    one_hot_labels = np.zeros((input.shape[0], batch_size))
+    one_hot_labels[labels.astype(int), np.arange(batch_size)] = 1
+    loss = -np.sum(one_hot_labels * np.log(input+1e-9)) / batch_size
+    
+    # for node in range(batch_size):
+    #     labels_node = int(labels[node])
+    #     loss -= np.log(input[labels_node][node])
 
-    loss /= batch_size
+    # loss /= batch_size
+
     eps = 0.00001
     dv_input = np.zeros(0)
     if backprop:
@@ -30,9 +36,12 @@ def loss_crossentropy(input, labels, hyper_params, backprop):
         
         # TODO: BACKPROP CODE
         #       Add a small eps to the denominator to avoid numerical instability
-        for node in range(batch_size):
-            labels_node = int(labels[node])
-            dv_input[labels_node][node] = -1 / (input[labels_node][node] + eps)
+        
+        dv_input = -one_hot_labels / (input + eps)
+
+        # for node in range(batch_size):
+        #     labels_node = int(labels[node])
+        #     dv_input[labels_node][node] = -1 / (input[labels_node][node] + eps)
 
 
 
