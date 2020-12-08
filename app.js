@@ -122,26 +122,44 @@ function getQuadrant(img, boundingBox) {
 // This will probably return a promise
 function checkFinger(img, prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
-//   console.log('Landmarks for model:')
-//   console.log(landmarks);
-  // Pass these landmarks to the model
-  return true;
+  console.log('Landmarks for model:')
+  console.log(landmarks);
+  // Pass these landmarks to the classifier
+  return fetch('http://127.0.0.1:8000', {
+    method: 'POST', 
+    body: JSON.stringify(landmarks)
+  }).then(
+      response => response.text()
+  ).then(
+      body => {
+          console.log(body)
+          const correct = (parseInt(body) === numFingers)
+          if (correct) {
+              console.log("You're correct!")
+          } else {
+              console.log("Incorrect. Expected: " + numFingers + "; Actual: " + body)
+          }
+          return correct
+      }
+  )
 }
 
 function checkQuadrantAndFinger(img, prediction, target) {
+    if (!prediction) {
+        return false
+    }
     console.log(`quadrant: ${getQuadrant(cameraSensor, prediction.boundingBox)}`)
     const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-    return quadrantCorrect && checkFinger(img, prediction, target.numFingers);    
+    return quadrantCorrect && checkFinger(img, prediction, target.numFingers);  
 }
 
 // Verify whether hand is correct
 function checkImage(img, target) {
   return model.estimateHands(img, modelParams.flipHorizontal).then(predictions => 
-      predictions.map(p => checkQuadrantAndFinger(img, p, target))
+      checkQuadrantAndFinger(img, predictions[0], target)
   ).then(checks => {
-    //   console.log(`Correct hand #${curSeq}: ${checks[0]}`);
-    if (checks.length == 0) console.log('No hand detected')  
-    return false || checks[0]
+      console.log(`Correct: ${checks}`);
+      return checks;
   })
 }
 
