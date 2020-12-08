@@ -329,7 +329,7 @@ function checkFingerLocal(prediction, numFingers) {
   const nonThumbs = ['index', 'middle', 'ring', 'pinky'].map(finger => {
     const { base, tip } = fingerIndex[finger];
     const diff = distFromOrigin(landmarks[tip]) - distFromOrigin(landmarks[base]);
-    return diff > 0 ? 1 : 0;
+    return diff > 0.25 ? 1 : 0;
   }).reduce((acc, val) => acc + val);
   if (nonThumbs < 4) {
     // console.log(`nonThumbs: ${nonThumbs}`);
