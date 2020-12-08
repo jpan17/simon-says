@@ -11,7 +11,7 @@ http.createServer((req, res) => {
   // FOR OUTPUTING KEYPOINTS INTO A FILE
   req.on('end', () => {
     const firstLine = 'fingers_keypoints\n'
-    fs.writeFile('keypoints_will_unnormalized.txt', firstLine + body, err => {
+    fs.writeFile('keypoints_will.txt', firstLine + body, err => {
       if (err) console.log(err)
       else console.log('Keypoints file saved!')
     })

@@ -17,6 +17,8 @@ const settings = {
   download: false,
   keypointsToFile: true,
   customModelParams: false,
+  crop: false,
+  download: false,
 }
 const modelParams = settings.customModelParams ? {
   detectionConfidence: 0.1,
@@ -105,11 +107,33 @@ handpose.load(modelParams).then(model => {
   img = new Image
   img.crossOrigin = 'anonymous'
   img.src = `http://127.0.0.1:8080/will/${finger}-${count}.jpg`
+  img.onerror = () => console.log('oopsies.. you dun goofed')
   img.onload = () => {
     ctx.drawImage(img, 0, 0)
     
     model.estimateHands(cameraSensor).then(predictions => {
       console.log(`detected ${predictions.length} hands for finger ${finger} #${count}`)
+
+      // Crop image to saveCanvas
+      if (predictions.length > 0) {
+        if (settings.crop) {
+          bb = predictions[0].boundingBox
+          tl = bb.topLeft, br = bb.bottomRight
+          newWidth = br[0] - tl[0], newHeight = br[1] - tl[1]
+          saveCanvas.width = newWidth
+          saveCanvas.height = newHeight
+          saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
+        }
+      }
+
+      // Download cropped image
+      if (settings.download) {
+        a = document.createElement('a')
+        a.download = `${finger}-${count}.png`
+        a.href = saveCanvas.toDataURL()
+        a.textContent = 'Download PNG'
+        a.click()
+      }
       
       // Store keypoints to be outputted in file
       if (settings.keypointsToFile && predictions.length > 0) {  
@@ -119,19 +143,26 @@ handpose.load(modelParams).then(model => {
       }
       
       // Get next image
-      count++
-      if (count == fingerCount[finger]) {
-        if (finger < 5) {
-          finger++
-          count = 0
-        } else {
-          stop = true
-          fetch('http://127.0.0.1:8000', {
-            method: 'POST', 
-            body: keypointsOutput
-          })
-        }
+      missing = {
+        0: [32, 31, 30, 29, 28, 27, 26],
+        1: [12, 9, 8, 7, 6, 5, 4, 2, 1, 0],
+        2: [20, 19, 18, 17, 13, 12, 11]
       }
+      do {
+        count++
+        if (count == fingerCount[finger]) {
+          if (finger < 5) {
+            finger++
+            count = 0
+          } else {
+            stop = true
+            fetch('http://127.0.0.1:8000', {
+              method: 'POST', 
+              body: keypointsOutput
+            })
+          }
+        }
+      } while (Object.keys(missing).includes(finger.toString()) && missing[finger].includes(count)) 
       if (!stop) img.src = `http://127.0.0.1:8080/will/${finger}-${count}.jpg`
     })
   }
