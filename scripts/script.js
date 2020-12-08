@@ -18,6 +18,7 @@ const settings = {
   download: false,
   keypointsToFile: true,
   customModelParams: false,
+  crop: false,
 }
 const datasetSettings = {
   kinect: {
@@ -45,6 +46,71 @@ stopButton.onclick = () => {
   settings.download = false
 }
 
+// Get distance from this point to the origin
+function getDist(p1, p2) {
+  return Math.sqrt(
+      Math.pow(p2[0] - p1[0], 2) +
+      Math.pow(p2[1] - p1[1], 2)
+  );
+}
+
+// Get the angle to rotate counter clockwise for the point to be vertical upwards
+function calculateAngleToVertical(origin, point) {
+  const x = point[0] - origin[0];
+  const y = point[1] - origin[1];
+  if (y === 0) {
+      return (x > 0 ? 1 : -1) * Math.PI / 2; 
+  }
+  return Math.atan(x / y) + (y < 0 ? 0 : Math.PI);
+}
+
+function normalizePredictions(prediction) {
+  // Create function to center landmarks to the palm base
+  const { palmBase, middleFinger } = prediction.annotations;
+  function centerLandmark(landmark) {
+      return [
+          landmark[0] - palmBase[0][0],
+          landmark[1] - palmBase[0][1],
+          landmark[2],
+      ]
+  }
+
+  // Create function to rotate landmarks to be vertical
+  const angle = calculateAngleToVertical(palmBase[0], middleFinger[0]);
+  const sinTheta = Math.sin(angle);
+  const cosTheta = Math.cos(angle);
+  function applyRotation(landmark) {
+      return [
+          landmark[0] * cosTheta - landmark[1] * sinTheta,
+          landmark[0] * sinTheta + landmark[1] * cosTheta,
+          landmark[2],
+      ]
+  }
+  
+  // Scales landmark to uniform size
+  const unitLength = getDist(palmBase[0], middleFinger[0]);
+  function scaleDown(landmark) {
+      return [
+          landmark[0] / unitLength,
+          landmark[1] / unitLength,
+          landmark[2],
+      ]
+  }
+
+  // Uncenter landmark (used for rendering the points)
+  function uncenterLandmark(landmark) {
+      return [
+          landmark[0] + palmBase[0][0],
+          landmark[1] + palmBase[0][1],
+          landmark[2],
+      ]
+  }
+
+  // Apply centering and rotating functions to landmarks
+  const { landmarks } = prediction;
+  return landmarks.map(centerLandmark).map(applyRotation).map(scaleDown);
+}
+
 handpose.load(modelParams).then(model => {
   p = 1, g = 1, n = 1
 
@@ -58,23 +124,25 @@ handpose.load(modelParams).then(model => {
     model.estimateHands(cameraSensor).then(predictions => {
       console.log(`detected ${predictions.length} hands for ${p}-${g}-${n}`)
       
-      // Crop image to saveCanvas
-      if (predictions.length > 0) {
-        bb = predictions[0].boundingBox
-        tl = bb.topLeft, br = bb.bottomRight
-        newWidth = br[0] - tl[0], newHeight = br[1] - tl[1]
-        saveCanvas.width = newWidth
-        saveCanvas.height = newHeight
-        saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
+      // // Crop image to saveCanvas
+      // if (predictions.length > 0) {
+      //   if (settings.crop) {
+      //     bb = predictions[0].boundingBox
+      //     tl = bb.topLeft, br = bb.bottomRight
+      //     newWidth = br[0] - tl[0], newHeight = br[1] - tl[1]
+      //     saveCanvas.width = newWidth
+      //     saveCanvas.height = newHeight
+      //     saveCtx.drawImage(img, tl[0], tl[1], newWidth, newHeight, 0, 0, newWidth, newHeight)
+      //   }
 
-        // Download cropped image
-        if (settings.download) {
-          a = document.createElement('a')
-          a.download = `${prefix}-${p}-${g}-${n}.png`
-          a.href = saveCanvas.toDataURL()
-          a.textContent = 'Download PNG'
-          a.click()
-        }
+        // // Download cropped image
+        // if (settings.download) {
+        //   a = document.createElement('a')
+        //   a.download = `${prefix}-${p}-${g}-${n}.png`
+        //   a.href = saveCanvas.toDataURL()
+        //   a.textContent = 'Download PNG'
+        //   a.click()
+        // }
 
         // // Send cropped image to server and store as file
         // blobData = saveCanvas.toBlob(blob => {
@@ -87,10 +155,11 @@ handpose.load(modelParams).then(model => {
         // })
       
         // Store keypoints to be outputted in file
-        if (settings.keypointsToFile) {
-          keypointsOutput += `${prefix}${g}_${p}${n}_${predictions[0].landmarks}\n`
+        if (settings.keypointsToFile && predictions.length > 0) {
+          let landmarks = normalizePredictions(predictions[0])
+          keypointsOutput += `${prefix}${g}_${p}${n}_${landmarks}\n`
         }
-      }
+      // }
       
       // Get next image
       datasetLimit = onKinect ? datasetSettings.kinect : datasetSettings.senz3d
