@@ -31,13 +31,13 @@ def train(model, input, label, params, numIters):
     ''' 
     # Initialize training parameters
     # Learning rate
-    lr = params.get("learning_rate", .005)
+    lr = params.get("learning_rate", .015)
     
     # Weight decay
     wd = params.get("weight_decay", .0005)
     
     # Batch size
-    batch_size = params.get("batch_size", 100)
+    batch_size = params.get("batch_size", 700)
     # There is a good chance you will want to save your network model during/after
     # training. It is up to you where you save and how often you choose to back up
     # your model. By default the code saves the model in 'model.npz'.
@@ -45,8 +45,10 @@ def train(model, input, label, params, numIters):
     
     # update_params will be passed to your update_weights function.
     # This allows flexibility in case you want to implement extra features like momentum.
+    vel = ([np.array([]) for _ in range(len(model['layers']))], [np.array([]) for _ in range(len(model['layers']))])  # init in calc_grad
     update_params = {"learning_rate": lr, 
-                     "weight_decay": wd }
+                     "weight_decay": wd,
+                     "velocity": vel }
     
     test_data = params['test_data']
     test_labels = params['test_labels']
@@ -58,8 +60,8 @@ def train(model, input, label, params, numIters):
     prev_weights = [None] * len(model['layers'])
     momentum = 0.5
     
-    step_size_training = 50
-    step_size_testing = 250
+    step_size_training = 10
+    step_size_testing = 50
     training_loss = []
     testing_loss = []
     
@@ -81,15 +83,15 @@ def train(model, input, label, params, numIters):
         
         if i % step_size_training == 0 and i % step_size_testing != 0:
             training_loss.append(loss[i])
-            print('Training loss:', loss[i])
+            print(i, 'Training loss:', loss[i])
 
         if i % step_size_testing == 0:
             output, _ = inference(model, test_data)
             test_loss, _ = loss_crossentropy(output, test_labels, None, True)
             testing_loss.append(test_loss)
             training_loss.append(loss[i])
-            print('Test loss:', test_loss)
-            print('Training loss:', loss[i])
+            print(i, 'Test loss:', test_loss)
+            print(i, 'Training loss:', loss[i])
         
         #   (4) Calculate gradients
         grads = calc_gradient(model, subset, activations, dv_input)
@@ -98,15 +100,15 @@ def train(model, input, label, params, numIters):
         model = update_weights(model, grads, update_params)
         
         #   (6*) Update the model weights with momentum 
-        for j in range(len(model['layers'])):
-            layer = model['layers'][j]
-            if layer['type'] == 'pool' or layer['type'] == 'softmax' or layer['type'] == 'relu' or layer['type'] == 'flatten':
-                continue
-            weights = np.array(layer['params']['W'])
+        # for j in range(len(model['layers'])):
+        #     layer = model['layers'][j]
+        #     if layer['type'] == 'pool' or layer['type'] == 'softmax' or layer['type'] == 'relu' or layer['type'] == 'flatten':
+        #         continue
+        #     weights = np.array(layer['params']['W'])
 
-            if prev_weights[j] is not None:
-                layer['params']['W'] += momentum * (weights - prev_weights[j])
-            prev_weights[j] = np.array(layer['params']['W'])
+        #     if prev_weights[j] is not None:
+        #         layer['params']['W'] += momentum * (weights - prev_weights[j])
+        #     prev_weights[j] = np.array(layer['params']['W'])
     
     elapsed_time = time.time() - begin_time
     
