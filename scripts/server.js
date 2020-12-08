@@ -10,8 +10,8 @@ http.createServer((req, res) => {
 
   // FOR OUTPUTING KEYPOINTS INTO A FILE
   req.on('end', () => {
-    const firstLine = 'gesture_person+number_keypoints'
-    fs.writeFile('keypoints.txt', firstLine + body, err => {
+    const firstLine = 'fingers_keypoints\n'
+    fs.writeFile('keypoints_will.txt', firstLine + body, err => {
       if (err) console.log(err)
       else console.log('Keypoints file saved!')
     })
