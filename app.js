@@ -34,9 +34,10 @@ const options = {
 }
 
 // Set constraints for the video stream
-var constraints = { video: { facingMode: 'user' }, audio: false }
+const constraints = { video: { facingMode: 'user' }, audio: false }
 
-var model = null;
+let model = null;
+let modelReady = false;
 
 // Model parameters 
 const modelParams = {
@@ -63,12 +64,39 @@ drawQuadrantLines(overlay)
 // Start the video stream when the window loads
 window.addEventListener('load', cameraStart)
 
-// Load the model!
-console.log('beginning to load model');
-handpose.load().then(lmodel => {
-    model = lmodel
-    console.log('camera model loaded!');
-})
+// Access the device camera and stream to cameraView
+function cameraStart() {
+    navigator.mediaDevices
+        .getUserMedia(constraints)
+        .then(stream => {
+            track = stream.getTracks()[0]
+            cameraView.srcObject = stream
+            
+            // Load the model!
+            cameraView.addEventListener('loadeddata', () => {
+                cameraSensor.width = cameraView.videoWidth
+                cameraSensor.height = cameraView.videoHeight
+                cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)
+                console.log('beginning to load model');
+                handpose.load().then(lmodel => {
+                    model = lmodel
+                    model.estimateHands(cameraSensor).then(() =>{
+                        setTimeout(() => {
+                            modelReady = true;
+                            console.log('camera model loaded!');
+                            startButton.classList.remove('hide');
+                            stopButton.classList.remove('hide');
+                        }, 4000)
+                    })
+                })
+            })
+            
+        })
+        .catch(error => {
+            console.error('Whoopsies... You dun goofed', error)
+            alert('let me innn')
+        })
+  }
 
 // 0 - Top left
 // 1 - Top right
@@ -178,7 +206,7 @@ function runDetectionImage(img) {
 
 // Take snapshot
 function capturePic() {
-    if (inGame) {
+    if (inGame && modelReady) {
         cameraSensor.width = cameraView.videoWidth
         cameraSensor.height = cameraView.videoHeight
         cameraSensor.getContext('2d').drawImage(cameraView, 0, 0)

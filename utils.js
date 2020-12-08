@@ -108,20 +108,6 @@ function displayHandOutline(numFingers, quadrant) {
   }
 }
 
-// Access the device camera and stream to cameraView
-function cameraStart() {
-  navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then(stream => {
-          track = stream.getTracks()[0]
-          cameraView.srcObject = stream
-      })
-      .catch(error => {
-          console.error('Whoopsies... You dun goofed', error)
-          alert('let me innn')
-      })
-}
-
 // Draw predictions in upper right box
 function renderPredictions(predictions, canvas, context, mediasource) {
 
