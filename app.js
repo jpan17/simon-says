@@ -207,26 +207,26 @@ function capturePic() {
                 // runDetectionImage(cameraSensor, sequence[curSeq])
                 checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
                     validDetection = validImage || validDetection
+                    if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
+                        if (!validDetection) {
+                            displayText = '...'
+                            middleText.innerHTML = displayText
+                            endGame()
+                        } else {
+                            console.log(`CORRECT!!!! ${curSeq}`)
+                            correctGestures++
+                            displayText = '✔'
+                            middleText.innerHTML = displayText
+                            validDetection = false
+                            scoreDisplay.innerHTML = `Current: ${curSeq+1}/${sequence.length}`
+                        }
+                        displayHandOutline(sequence[curSeq].numFingers, sequence[curSeq].quadrant)
+                        curSeq++
+                    } else {
+                        displayText = '...'
+                        console.log('detecting...')
+                    }
                 })
-            }
-            if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
-                if (!validDetection) {
-                    displayText = '...'
-                    middleText.innerHTML = displayText
-                    endGame()
-                } else {
-                    console.log(`CORRECT!!!! ${curSeq}`)
-                    correctGestures++
-                    displayText = '✔'
-                    middleText.innerHTML = displayText
-                    validDetection = false
-                    scoreDisplay.innerHTML = `Current: ${curSeq+1}/${sequence.length}`
-                }
-                displayHandOutline(sequence[curSeq].numFingers, sequence[curSeq].quadrant)
-                curSeq++
-            } else {
-                displayText = '...'
-                console.log('detecting...')
             }
         }
         
