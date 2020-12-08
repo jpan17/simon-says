@@ -31,13 +31,13 @@ def train(model, input, label, params, numIters):
     ''' 
     # Initialize training parameters
     # Learning rate
-    lr = params.get("learning_rate", .005)
+    lr = params.get("learning_rate", .01)
     
     # Weight decay
     wd = params.get("weight_decay", .0005)
     
     # Batch size
-    batch_size = params.get("batch_size", 100)
+    batch_size = params.get("batch_size", 500)
     # There is a good chance you will want to save your network model during/after
     # training. It is up to you where you save and how often you choose to back up
     # your model. By default the code saves the model in 'model.npz'.
@@ -65,7 +65,6 @@ def train(model, input, label, params, numIters):
     
     begin_time = time.time()
     
-    
     for i in range(numIters):
         # Steps:
         #   (1) Select a subset of the input to use as a batch
@@ -90,6 +89,10 @@ def train(model, input, label, params, numIters):
             training_loss.append(loss[i])
             print('Test loss:', test_loss)
             print('Training loss:', loss[i])
+            
+        # learning rate decay
+        # if i % 2000 == 0:
+        #     lr *= 0.5
         
         #   (4) Calculate gradients
         grads = calc_gradient(model, subset, activations, dv_input)
@@ -122,10 +125,10 @@ def train(model, input, label, params, numIters):
             fingerPredictions[champIndex][1] += 1
             correctPredictions += 1
 
-    # for finger in range(len(fingerPredictions)):
-    #     print("Finger {0} accuracy: {1}".format(finger, 
-    #                                             fingerPredictions[finger][1] / 
-    #                                             fingerPredictions[finger][0]))
+    for finger in range(len(fingerPredictions)):
+        print("Finger {0} accuracy: {1}".format(finger, 
+                                                fingerPredictions[finger][1] / 
+                                                fingerPredictions[finger][0]))
     
     print('Final model accuracy:', correctPredictions / len(test_labels))  
     
