@@ -31,7 +31,7 @@ def train(model, input, label, params, numIters):
     ''' 
     # Initialize training parameters
     # Learning rate
-    lr = params.get("learning_rate", .015)
+    lr = params.get("learning_rate", .01)
     
     # Weight decay
     wd = params.get("weight_decay", .0005)

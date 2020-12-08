@@ -55,10 +55,10 @@ def main():
             fingerPredictions[champIndex][1] += 1
             correctPredictions += 1
 
-    # for finger in range(len(fingerPredictions)):
-    #     print("Finger {0} accuracy: {1}".format(finger, 
-    #                                             fingerPredictions[finger][1] / 
-    #                                             fingerPredictions[finger][0]))
+    for finger in range(len(fingerPredictions)):
+        print("Finger {0} accuracy: {1}".format(finger, 
+                                                fingerPredictions[finger][1] / 
+                                                fingerPredictions[finger][0]))
     
     print('Model accuracy on Will hands:', correctPredictions / len(test_labels))  
     
