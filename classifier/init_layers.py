@@ -63,7 +63,8 @@ def init_layers(type, info):
     elif type == 'nxm_conv':
         # Requires filter_width, filter_height, filter_depth, num_filters
         fn = fn_conv
-        W = weight_init(info['filter_height'], info['filter_width'], info['filter_depth'], info['num_filters']) * ws
+        if info['extra_dim']: W = weight_init(info['filter_height'], info['filter_width'], info['filter_extra'], info['filter_depth'], info['num_filters']) * ws
+        else: W = weight_init(info['filter_height'], info['filter_width'], info['filter_depth'], info['num_filters']) * ws
         b = weight_init(info['num_filters'], 1) * bs
         params['W'] = W
         params['b'] = b

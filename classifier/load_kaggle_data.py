@@ -36,10 +36,10 @@ def load_data():
         train_labels.append(first_string[0])
         
         # split coordinates into respective keypoints
-        keypoints = [coordinates[i * num_coords:(i + 1) * num_coords] for i in range((len(coordinates) + num_coords - 1) // num_coords)]
+        keypoints = [coordinates[i * num_coords:(i + 1) * num_coords] for i in range(1, (len(coordinates) + num_coords - 1) // num_coords)]
 
         keypoints = np.asfarray(keypoints)
-        keypoints = np.reshape(keypoints.T, (1, 3, 21))
+        keypoints = np.reshape(keypoints.T, (1, 3, 4, 5))
         train_data.append(keypoints)
         
     # get test data / labels in correct format        
@@ -57,10 +57,10 @@ def load_data():
         test_labels.append(first_string[0])
         
         # split coordinates into respective keypoints
-        keypoints = [coordinates[i * num_coords:(i + 1) * num_coords] for i in range((len(coordinates) + num_coords - 1) // num_coords)]
+        keypoints = [coordinates[i * num_coords:(i + 1) * num_coords] for i in range(1, (len(coordinates) + num_coords - 1) // num_coords)]
 
         keypoints = np.asfarray(keypoints)
-        keypoints = np.reshape(keypoints.T, (1, 3, 21))
+        keypoints = np.reshape(keypoints.T, (1, 3, 4, 5))
         test_data.append(keypoints)
     
     train_data = np.asfarray(train_data)

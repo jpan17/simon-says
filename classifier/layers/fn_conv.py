@@ -20,15 +20,16 @@ def fn_conv(input, params, hyper_params, backprop, dv_output=None):
             grad['b']: gradient wrt bias, same size as params['b']
     """
 
-    in_height, in_width, num_channels, batch_size = input.shape
-    _, _, filter_depth, num_filters = params['W'].shape
+    in_height, in_width, in_extra, num_channels, batch_size = input.shape
+    _, _, _, filter_depth, num_filters = params['W'].shape
     out_height = in_height - params['W'].shape[0] + 1
     out_width = in_width - params['W'].shape[1] + 1
+    out_extra = in_extra - params['W'].shape[2] + 1
 
-    assert params['W'].shape[2] == input.shape[2], 'Filter depth does not match number of input channels'
+    assert params['W'].shape[3] == input.shape[3], 'Filter depth does not match number of input channels'
 
     # Initialize
-    output = np.zeros((out_height, out_width, num_filters, batch_size))
+    output = np.zeros((out_height, out_width, out_extra, num_filters, batch_size))
     dv_input = np.zeros(0)
     grad = {'W': np.zeros(0),
             'b': np.zeros(0)}
@@ -40,11 +41,11 @@ def fn_conv(input, params, hyper_params, backprop, dv_output=None):
     for i in range(batch_size): 
         for j in range(num_filters): 
             for k in range(num_channels): 
-                input_im = input[:,:,k,i]
-                W_im = W[:,:,k,j]
+                input_im = input[:,:,:,k,i]
+                W_im = W[:,:,:,k,j]
                 conv_im = scipy.signal.convolve(input_im, W_im, mode='valid')
-                output[:,:,j,i] += np.reshape(conv_im, (conv_im.shape[:2]))
-            output[:,:,j,i] += b[j]
+                output[:,:,:,j,i] += np.reshape(conv_im, (conv_im.shape[:3]))
+            output[:,:,:,j,i] += b[j]
 
     if backprop:
         assert dv_output is not None
@@ -59,17 +60,17 @@ def fn_conv(input, params, hyper_params, backprop, dv_output=None):
                 for k in range(num_filters): 
 
                     # Convolve rev image with dv_output to compute gradient of W
-                    rev_im = input[::-1,::-1,j,i]
-                    dv_output_im = dv_output[:,:,k,i]
+                    rev_im = input[::-1,::-1,::-1,j,i]
+                    dv_output_im = dv_output[:,:,:,k,i]
                     dv_W_conv = scipy.signal.convolve(rev_im, dv_output_im, mode='valid')
                     # print(grad['W'].shape, dv_W_conv.shape, rev_im.shape, dv_output_im.shape)
-                    grad['W'][:,:,j,k] += dv_W_conv
+                    grad['W'][:,:,:,j,k] += dv_W_conv
 
                     # Convolve rev W with dv_output to compute gradient of input
-                    rev_W = W[::-1,::-1,j,k]
+                    rev_W = W[::-1,::-1,::-1,j,k]
                     dv_input_conv = scipy.signal.convolve(rev_W, dv_output_im, mode='full')
                     # print(dv_input_conv.shape, rev_W.shape, dv_output_im.shape, out_height, out_width)
-                    dv_input[:,:,j,i] += dv_input_conv
+                    dv_input[:,:,:,j,i] += dv_input_conv
 
                     # Compute gradient of bias
                     grad['b'][k] += np.sum(dv_output_im)

@@ -11,25 +11,28 @@ import time
 def main():
     train_data, train_label, test_data, test_label = load_data()
     layers = [init_layers('nxm_conv', {'filter_height': 1,
-                                       'filter_width': 3,
+                                       'filter_width': 1,
+                                       'filter_extra': 3,
                                        'filter_depth': 1,
+                                       'extra_dim': True,
+                                       'num_filters': 5}),
+              init_layers('relu', {}),
+              init_layers('nxm_conv', {'filter_height': 1,
+                                       'filter_width': 4,
+                                       'filter_extra': 1,
+                                       'filter_depth': 5,
+                                       'extra_dim': True,
                                        'num_filters': 5}),
               init_layers('relu', {}),
               init_layers('flatten', {}),
-              init_layers('linear', {'num_in': 105,
-                                     'num_out': 60}),      
+              init_layers('linear', {'num_in': 25,
+                                     'num_out': 5}),      
               init_layers('relu', {}),
-              init_layers('linear', {'num_in': 60,
-                                     'num_out': 35}),      
-              init_layers('relu', {}),
-              init_layers('linear', {'num_in': 35,
-                                     'num_out': 15}),      
-              init_layers('relu', {}),
-              init_layers('linear', {'num_in': 15,
-                                     'num_out': 6}),      
+              init_layers('linear', {'num_in': 5,
+                                     'num_out': 6}),            
               init_layers('softmax', {})]
         
-    model = init_model(layers, [21, 3, 1], 6, True)
+    model = init_model(layers, [5, 4, 3, 1], 6, True)
     params = {"test_data": test_data,
               "test_labels": test_label}
         
