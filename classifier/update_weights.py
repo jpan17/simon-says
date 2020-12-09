@@ -30,8 +30,10 @@ def update_weights(model, grads, hyper_params):
                 vel_b[i] = np.zeros(current_layer['params']['b'].shape)
             vel_w[i] = rho * vel_w[i] - grads[i]['W']
             current_layer['params']['W'] += a * vel_w[i]
+            current_layer['params']['W'] -= current_layer['params']['W'] * lmd
             vel_b[i] = rho * vel_b[i] - grads[i]['b']
             current_layer['params']['b'] += a * vel_b[i]
 
 
     return updated_model
+
