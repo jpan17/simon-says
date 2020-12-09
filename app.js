@@ -1,3 +1,7 @@
+// Game Options
+let useServer = false
+
+
 // HTML elements
 const cameraView = document.querySelector('#camera-view'),
     cameraOutput = document.querySelector('#camera-output'),
@@ -11,7 +15,6 @@ const cameraView = document.querySelector('#camera-view'),
     middleText = document.querySelector('#middle-text'),
     middleDisplay = document.querySelector('#middle-display'),
     infoDisplay = document.querySelector('#info-display')
-
 // Game variables
 let timePerSeq = 3,
     newHandPauseTime = 3,
@@ -152,7 +155,7 @@ function capturePic() {
                 // runDetectionImage(cameraSensor, sequence[curSeq])
                 checkImage(cameraSensor, sequence[curSeq]).then(validImage => {
                     validDetection = validImage || validDetection
-                    if ((curTime - totalPauseTime) % timePerSeq == 1 && curTime - totalPauseTime > 0) {
+                    if ((curTime - totalPauseTime) % timePerSeq == 0 && curTime - totalPauseTime > 0) {
                         if (!validDetection) {
                             displayText = '...'
                             middleText.innerHTML = displayText

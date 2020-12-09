@@ -272,8 +272,8 @@ function checkQuadrant(img, boundingBox, quadrant) {
 
 function checkFinger(prediction, numFingers) {
   const landmarks = normalizePredictions(prediction);
-  console.log('Landmarks for model:')
-  console.log(landmarks);
+  // console.log('Landmarks for model:')
+  // console.log(landmarks);
   // Pass these landmarks to the classifier
   return fetch('http://127.0.0.1:8000', {
     method: 'POST', 
@@ -339,6 +339,9 @@ function checkQuadrantAndFinger(img, prediction, target) {
       return false
     }
     const quadrantCorrect = checkQuadrant(img, prediction.boundingBox, target.quadrant);
-    return quadrantCorrect && checkFingerLocal(prediction, target.numFingers);  
-    // return quadrantCorrect && checkFinger(prediction, target.numFingers);  
+    if (useServer) {
+      return quadrantCorrect && checkFinger(prediction, target.numFingers);  
+    } else {
+      return quadrantCorrect && checkFingerLocal(prediction, target.numFingers);  
+    }
 }
