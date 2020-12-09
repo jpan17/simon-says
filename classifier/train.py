@@ -9,7 +9,17 @@ from calc_gradient import calc_gradient
 from loss_crossentropy import loss_crossentropy
 from update_weights import update_weights
 ######################################################
-
+def plot_test_accuracy(x, numIters, step_size_testing):
+    X_testing = np.arange(0, numIters, step_size_testing)
+    
+    plt.plot(X_testing, x)
+    
+    plt.title('Validation Accuracy vs Number of Iterations')
+    plt.xlabel('Iterations')
+    plt.ylabel('Accuracy')
+    # plt.show()
+    plt.savefig('accuracy.png')
+    
 def train(model, input, label, params, numIters):
     '''
     This training function is written specifically for classification,
@@ -64,6 +74,7 @@ def train(model, input, label, params, numIters):
     step_size_testing = 50
     training_loss = []
     testing_loss = []
+    testing_accuracy = []
     
     begin_time = time.time()
     
@@ -81,7 +92,7 @@ def train(model, input, label, params, numIters):
         loss[i], dv_input = loss_crossentropy(inference_output, labels, None, True)
         
         if i % step_size_training == 0 and i % step_size_testing != 0:
-            training_loss.append(loss[i])
+            training_loss.append(loss[i])          
             print(i, 'Training loss:', loss[i])
 
         if i % step_size_testing == 0:
@@ -89,6 +100,13 @@ def train(model, input, label, params, numIters):
             test_loss, _ = loss_crossentropy(output, test_labels, None, True)
             testing_loss.append(test_loss)
             training_loss.append(loss[i])
+            correct = 0
+            for j in range(len(test_labels)):
+                champIndex = np.argmax(output[:, j])
+                if champIndex == test_labels[j]:
+                    correct += 1
+            print(i, 'Test accuracy:', correct / len(test_labels))
+            testing_accuracy.append(correct / len(test_labels))          
             print(i, 'Test loss:', test_loss)
             print(i, 'Training loss:', loss[i])
         
@@ -96,7 +114,19 @@ def train(model, input, label, params, numIters):
         grads = calc_gradient(model, subset, activations, dv_input)
         
         #   (5) Update the weights of the model
-        model = update_weights(model, grads, update_params)
+        model = update_weights(model, grads, update_params)        
+        
+        # #   (6*) Update the model weights with momentum 
+        # for j in range(len(model['layers'])):
+        #     layer = model['layers'][j]
+        #     if layer['type'] == 'pool' or layer['type'] == 'softmax' or layer['type'] == 'relu' or layer['type'] == 'flatten':
+        #         continue
+        #     weights = np.array(layer['params']['W'])
+
+        #     if prev_weights[j] is not None:
+        #         layer['params']['W'] += momentum * (weights - prev_weights[j])
+        #     prev_weights[j] = np.array(layer['params']['W'])
+            
 
     
     elapsed_time = time.time() - begin_time
@@ -125,15 +155,25 @@ def train(model, input, label, params, numIters):
     X_training = np.arange(0, numIters, step_size_training)
     X_testing = np.arange(0, numIters, step_size_testing)
     
-    plt.plot(X_training, training_loss, label="training")
-    plt.plot(X_testing, testing_loss, label="testing")
+    fig, (ax1, ax2) = plt.subplots(2)
+    fig.suptitle('Training/Testing Loss and Testing Accuracy vs Number of Iterations')
     
-    plt.legend()
-    plt.title('Training/Testing Loss vs Number of Iterations')
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
-    # plt.show()
+    ax1.plot(X_training, training_loss, label="training")
+    ax1.plot(X_testing, testing_loss, label="testing")
+    
+    ax1.legend()
+    ax1.set_ylabel('Loss')
+    ax1.set_xlabel('Iterations')
+    
+    X_testing = np.arange(0, numIters, step_size_testing)
+    
+    ax2.plot(X_testing, testing_accuracy)
+    
+    ax2.set_xlabel('Iterations')
+    ax2.set_ylabel('Testing Accuracy')
+    # plt.savefig('accuracy.png')
+    plt.show()
     plt.savefig('loss_curves.png')
-    
+        
     np.savez(save_file, **model)
     return model, loss

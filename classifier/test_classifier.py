@@ -79,7 +79,7 @@ def main():
     labels = np.asfarray(labels)
     print(samples.shape)
     
-    model = np.load('9409c_model.npz', allow_pickle=True)
+    model = np.load('model.npz', allow_pickle=True)
     model = dict(model)
     willOutput, _ = inference(model, test_data)
     output, _ = inference(model, samples)
