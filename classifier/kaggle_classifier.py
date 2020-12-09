@@ -10,45 +10,20 @@ import time
 
 def main():
     train_data, train_label, test_data, test_label = load_data()
-    layers = [
-              init_layers('nxm_conv', {'filter_height': 1,
+
+    layers = [init_layers('nxm_conv', {'filter_height': 1,
                                        'filter_width': 3,
                                        'filter_depth': 1,
                                        'num_filters': 5}),
               init_layers('relu', {}),
               init_layers('flatten', {}),
-            #   init_layers('linear', {'num_in': 105,
-            #                          'num_out': 80}),            
-            #   init_layers('relu', {}),
-            #   init_layers('linear', {'num_in': 80,
-            #                          'num_out': 60}),            
-            #   init_layers('relu', {}),
-            #   init_layers('linear', {'num_in': 60,
-            #                          'num_out': 30}),            
-              # init_layers('relu', {}),
+
               init_layers('linear', {'num_in': 105,
                                      'num_out': 6}),            
               init_layers('relu', {}),
               init_layers('linear', {'num_in': 6,
                                      'num_out': 6}),   
               init_layers('softmax', {})]        
-    # layers =  [
-    #           init_layers('flatten', {}),
-    #         #   init_layers('linear', {'num_in': 63,
-    #         #                          'num_out': 50}), 
-    #         #   init_layers('relu', {}),                
-    #         #   init_layers('linear', {'num_in': 50,
-    #         #                          'num_out': 40}), 
-    #         #   init_layers('relu', {}),  
-    #         #   init_layers('linear', {'num_in': 40,
-    #         #                          'num_out': 30}), 
-    #         #   init_layers('relu', {}),  
-    #         #   init_layers('linear', {'num_in': 63,
-    #         #                          'num_out': 40}),  
-    #           init_layers('relu', {}), 
-    #           init_layers('linear', {'num_in': 63,
-    #                                  'num_out': 6}),            
-    #           init_layers('softmax', {})]
         
     model = init_model(layers, [21, 3, 1], 6, True)
     params = {"test_data": test_data,
